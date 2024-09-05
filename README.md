@@ -12,19 +12,19 @@ Está diseñada con un enfoque basado en el rendimiento y la productividad, al m
 ## Características
 
 - [Instalación](#instalación)
-- [Configuración inicial](#instalación)
+- [Configuración inicial](#instalación) - `JMaterialApp` & `JPage`
 - Bases de **JSM**
-  - [Gestión de estado](#gestión-de-estado)
-  - [Inyección de dependencias - `JDependency`](#inyección-de-dependencias)
-  - [Gestión de rutas - `JRouter`](#gestión-de-rutas)
-  - [Gestión de servicios - `JService`](#gestión-de-servicios)
+  - [Gestión de estado](#gestión-de-estado) - `JBuilderWidget` & `JObserverWidget`
+  - [Inyección de dependencias](#inyección-de-dependencias) - `JDependency`
+  - [Gestión de rutas](#gestión-de-rutas) - `JRouter`
+  - [Gestión de servicios](#gestión-de-servicios) - `JService`
 - [Utilidades](#utilidades)
-  - [Internacionalización - `JTranslations`](#internacionalización)
-  - [Temas Visuales - `JTheme`](#temas-visuales)
-  - [Diálogos - `JDialog`](#jdialog)
-  - [Consola de Depuración - `JConsole`](#jconsole)
-  - [Trabajadores - `JWorker`](#jworker)
-  - [Utilidades Generales - `JUtils`](#jutils)
+  - [Internacionalización](#internacionalización) - `JTranslations`
+  - [Temas Visuales](#temas-visuales) - `JTheme`
+  - [Diálogos](#jdialog) - `JDialog`
+  - [Consola de Depuración](#jconsole) - `JConsole`
+  - [Trabajadores](#jworker) - `JWorker`
+  - [Utilidades Generales](#jutils) - `JUtils`
 - [Ejemplos](#ejemplos)
 
 <br>
