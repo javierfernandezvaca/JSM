@@ -27,7 +27,7 @@ Está diseñada con un enfoque basado en el rendimiento y la productividad, al m
 
 ## Instalación
 
-Añada la librería **JSM** a su archivo `pubspec.yaml`:
+Añada la librería a su archivo `pubspec.yaml`:
 
 ```yaml
 dependencies:
@@ -37,7 +37,7 @@ dependencies:
       ref: master
 ```
 
-Luego, importe la librería **JSM** en cada uno de los archivos en los se utilizará:
+Luego, importe la librería en cada uno de los archivos en los se utilizará:
 
 ```dart
 import 'package:jsm/jsm.dart';
@@ -45,9 +45,100 @@ import 'package:jsm/jsm.dart';
 
 <br>
 
+## Acerca de JSM
+
+Para utilizar el poder y las bondades de JSM debe:
+
+> Agregar `J` antes de su `MaterialApp`, convirtiéndolo en `JMaterialApp`
+
+```dart
+void main() => runApp(JMaterialApp(/* ... */));
+```
+
+<br>
+
+### JMaterialApp
+
+`JMaterialApp` es la puerta de entrada a tu aplicación JSM. Simplemente reemplazando **MaterialApp** por **JMaterialApp** en tu función `main()`, desbloqueas todo el potencial de JSM para la gestión de estado, inyección de dependencias y enrutamiento sin necesidad de configuraciones adicionales.
+
+Ejemplo:
+
+```dart
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return JMaterialApp(
+      routes: [
+        JRoute(route: '/login', page: const LoginPage()),
+        JRoute(route: '/register', page: const RegisterPage()),
+        // ...
+      ],
+      initialRoute: '/login',
+    );
+  }
+}
+```
+
+Explicación:
+
+En este ejemplo, `JMaterialApp` no solo configura tu aplicación, sino que también integra la gestión de rutas de JSM, permitiéndote navegar fácilmente entre sus páginas declaradas en `routes`.
+
+<br>
+
+### JPage
+
+`JPage` simplifica la creación de páginas en tu aplicación JSM al proporcionar una forma estructurada de conectar una vista con su controlador asociado. Esto promueve la separación de la interfaz de usuario (UI) y la lógica de negocio, mejorando la organización y el mantenimiento de tu código.
+
+Al crear una `JPage`, defines un controlador y una función builder que recibe el controlador como argumento. JPage utiliza JDependency para asegurar que el controlador esté disponible para la vista, permitiéndote acceder a sus métodos y propiedades.
+
+Ejemplo:
+
+```dart
+class LoginController extends JController {
+  String message = "Hello...";
+
+  @override
+  void onInit() {}
+
+  @override
+  void onReady() {}
+
+  @override
+  void onClose() {}
+}
+
+class LoginPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return JPage<LoginController>(
+      create: () => LoginController(),
+      builder: (context, controller) {
+        return Scaffold(
+          body: Center(
+            child: Text(controller.message),
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+Explicación:
+
+En este ejemplo, LoginPage utiliza JPage para mostrar un mensaje proporcionado por LoginController. La función builder accede al controlador y utiliza su propiedad message para mostrarla en la pantalla.
+
+<br>
+
 ## Gestión de estado
 
-La gestión de estado es un componente esencial en el desarrollo de aplicaciones. Esta se refiere a cómo se manejan los datos que determinan la interfaz de usuario y cómo estos cambian en respuesta a las interacciones del usuario. **JSM** ofrece dos formas diferentes de administrar el estado:
+La gestión de estado es un componente esencial en el desarrollo de aplicaciones. Esta se refiere a cómo se manejan los datos que determinan la interfaz de usuario y cómo estos cambian en respuesta a las interacciones del usuario. JSM ofrece dos formas diferentes de administrar el estado:
 
 - [Administración de estado simple](#administración-de-estado-simple)
 - [Administración de estado reactiva](#administración-de-estado-reactiva)
@@ -56,7 +147,7 @@ La gestión de estado es un componente esencial en el desarrollo de aplicaciones
 
 ### Administración de estado simple
 
-El mecanismo de la administración de estado simple de **JSM**, es una herramienta poderosa que utiliza el método `update()` con una lista opcional de identificadores de cada widget especial `JBuilderWidget`, que ofrece varias ventajas que lo hacen una opción eficiente y flexible para actualizar la interfaz de usuario; asi como:
+El mecanismo de la administración de estado simple de JSM, es una herramienta poderosa que utiliza el método `update()` con una lista opcional de identificadores de cada widget especial `JBuilderWidget`, que ofrece varias ventajas que lo hacen una opción eficiente y flexible para actualizar la interfaz de usuario; asi como:
 
 - **Actualizaciones precisas**:
   - Permite realizar actualizaciones específicas en lugar de una actualización completa `setState()`, optimizando el rendimiento y la experiencia del usuario.
@@ -137,7 +228,7 @@ Explicación:
 
 ### Administración de estado reactiva
 
-La administración de estado reactiva de **JSM**, es una herramienta poderosa que permite crear interfaces de usuario dinámicas y sensibles a los cambios de estado de forma intuitiva y eficiente.
+La administración de estado reactiva de JSM, es una herramienta poderosa que permite crear interfaces de usuario dinámicas y sensibles a los cambios de estado de forma intuitiva y eficiente.
 
 A diferencia de la administración de estado simple, este enfoque se basa en el paradigma reactivo (liberándote de las actualizaciones manuales), donde cada widget especial `JObserverWidget` se actualiza automáticamente en respuesta a cambios en su respectiva variable observable `.observable`. Todo esto permite crear aplicaciones fluidas, eficientes y adaptables que se actualizan en tiempo real y ofrece varias ventajas para actualizar la interfaz de usuario; asi como:
 
@@ -224,7 +315,7 @@ Estas formas pueden simplificar la administración del estado en tu aplicación,
 
 ## Inyección de dependencias
 
-La clase **JDependency** de **JSM** es una herramienta eficiente para gestionar las dependencias. Utiliza un mapa para almacenar y administrar las dependencias, permitiendo un manejo más dinámico y flexible en comparación con la gestión de dependencias tradicional. **JDependency** permite que las dependencias sean permanentes o no permanentes. Las dependencias no permanentes pueden ser eliminadas, mientras que las dependencias permanentes no pueden ser eliminadas.
+La clase **JDependency** de JSM es una herramienta eficiente para gestionar las dependencias. Utiliza un mapa para almacenar y administrar las dependencias, permitiendo un manejo más dinámico y flexible en comparación con la gestión de dependencias tradicional. **JDependency** permite que las dependencias sean permanentes o no permanentes. Las dependencias no permanentes pueden ser eliminadas, mientras que las dependencias permanentes no pueden ser eliminadas.
 
 Las ventajas de usar JDependency incluyen:
 
@@ -296,7 +387,7 @@ JDependency.clear();
 
 ## Gestión de rutas
 
-La clase **JRouter** de **JSM** proporciona una serie de métodos para facilitar la navegación entre diferentes rutas en una aplicación. A continuación se presentan algunos ejemplos de cómo utilizar estos métodos:
+La clase **JRouter** de JSM proporciona una serie de métodos para facilitar la navegación entre diferentes rutas en una aplicación. A continuación se presentan algunos ejemplos de cómo utilizar estos métodos:
 
 > **Navegar a una nueva pantalla**
 
@@ -342,7 +433,7 @@ var data = await JRouter.toNamed('/Payment');
 
 ## Gestión de servicios
 
-La clase **JService** de **JSM** es una herramienta abstracta para gestionar los servicios de manera eficiente. Utiliza un mapa para almacenar y administrar los servicios, proporcionando métodos para iniciar, detener, obtener y verificar si un servicio está en ejecución. Cada servicio se almacena con una clave única que se genera a partir del tipo del servicio y un nombre de instancia opcional.
+La clase **JService** de JSM es una herramienta abstracta para gestionar los servicios de manera eficiente. Utiliza un mapa para almacenar y administrar los servicios, proporcionando métodos para iniciar, detener, obtener y verificar si un servicio está en ejecución. Cada servicio se almacena con una clave única que se genera a partir del tipo del servicio y un nombre de instancia opcional.
 
 Las ventajas de usar JService incluyen:
 
