@@ -15,12 +15,16 @@ Está diseñada con un enfoque basado en el rendimiento y la productividad, al m
 - [Configuración inicial](#instalación)
 - Bases de **JSM**
   - [Gestión de estado](#gestión-de-estado)
-  - [Inyección de dependencias](#inyección-de-dependencias)
-  - [Gestión de rutas](#gestión-de-rutas)
-  - [Gestión de servicios](#gestión-de-servicios)
+  - [Inyección de dependencias - `JDependency`](#inyección-de-dependencias)
+  - [Gestión de rutas - `JRouter`](#gestión-de-rutas)
+  - [Gestión de servicios - `JService`](#gestión-de-servicios)
 - [Utilidades](#utilidades)
-  - [Internacionalización](#internacionalización) - `No`
-  - [Temas Visuales](#temas-visuales) - `No`
+  - [Internacionalización - `JTranslations`](#internacionalización)
+  - [Temas Visuales - `JTheme`](#temas-visuales)
+  - [Diálogos - `JDialog`](#jdialog)
+  - [Consola de Depuración - `JConsole`](#jconsole)
+  - [Trabajadores - `JWorker`](#jworker)
+  - [Utilidades Generales - `JUtils`](#jutils)
 - [Ejemplos](#ejemplos)
 
 <br>
@@ -508,6 +512,372 @@ bool isRunningNamed = JService.isRunning<MyService>(instanceName: 'S1');
 ```dart
 // Detener todos los servicios
 JService.stopAll();
+```
+
+<br>
+
+##  Utilidades
+
+<br>
+
+###  Temas Visuales
+
+La clase `JTheme` de JSM te permite gestionar los temas de tu aplicación de forma sencilla y dinámica. Puedes cambiar entre temas predefinidos (claro y oscuro) o crear tus propios temas personalizados. Gracias a su naturaleza reactiva, la interfaz de usuario se actualizará automáticamente al cambiar de tema.
+
+**Características**:
+
+- **Temas predefinidos**: JSM incluye temas claros y oscuros por defecto.
+- **Temas personalizados**: Puedes definir y cambiar a tus propios temas `ThemeData`.
+- **Cambio de tema dinámico**: Utiliza  `JTheme.changeTheme(nuevoTema)` para cambiar el tema en tiempo de ejecución.
+- **Alternancia entre temas**: `JTheme.toggleTheme()` alterna entre el tema claro y oscuro.
+- **Integración reactiva**: `JTheme.currentTheme` es un `JObservable` que te permite reaccionar a los cambios de tema en tus widgets utilizando `JObserverWidget`.
+
+**Ejemplo**:
+
+```dart
+// Alternar entre el tema claro y oscuro al presionar un botón.
+ElevatedButton(
+  onPressed: () {
+    JTheme.toggleTheme(); 
+  },
+  child: JObserverWidget(
+    observable: JTheme.currentTheme,
+    onChange: (ThemeData theme) {
+      bool isLightTheme = theme == JTheme.lightTheme;
+      return Text(isLightTheme ? 'Activar tema oscuro' : 'Activar tema claro');
+    },
+  ),
+),
+```
+
+<br>
+
+### Internacionalización
+
+JSM proporciona un sistema de internacionalización sencillo pero potente, permitiéndote crear aplicaciones que se adaptan a diferentes idiomas.
+
+**Características**:
+
+- **Definición de traducciones**: Define tus traducciones utilizando las clases `JLanguage` y `JTranslation`.
+- **Cambio de idioma**: Utiliza `JTranslations.changeLocale(nuevoIdioma)` para cambiar el idioma en tiempo de ejecución.
+- **Acceso a traducciones**: La extensión `tr` en la clase String te permite acceder fácilmente a las traducciones desde cualquier parte de tu código, incluyendo controladores, widgets y clases de utilidad.
+- **Widgets de traducción**: `JTranslateWidget` y `JTranslateMultipleWidget` simplifican la visualización de traducciones y la actualización dinámica de la interfaz de usuario.
+
+Ejemplos:
+
+```dart
+// Mostrar un saludo en el idioma actual
+Text('Hola Mundo'.tr),
+
+// Cambiar el idioma al presionar un botón
+ElevatedButton(
+  onPressed: () {
+    // Cambiar a español
+    JTranslations.changeLocale(Locale('es', 'ES'));
+  },
+  child: Text('Cambiar a Español'),
+),
+
+// Mostrar un diálogo con mensajes traducidos
+void mostrarDialogoConfirmacion(BuildContext context) {
+  JDialog.confirm(
+    context: context,
+    title: Text('Confirmación'.tr),
+    content: Text('¿Estás seguro de que quieres continuar?'.tr),
+    confirmText: Text('Sí'.tr),
+    cancelText: Text('No'.tr),
+    onConfirm: () {
+      // Acción a realizar al confirmar
+    },
+  );
+}
+```
+
+**Configuración**:
+
+1. Crea una lista de `JLanguage`, cada uno con su locale y lista de `JTranslation`.
+2. Asigna esta lista de `JLanguage` en el inicio de tu aplicación.
+
+<br>
+
+### JDialog
+
+La clase `JDialog` proporciona una interfaz sencilla para mostrar diálogos y snackbars en tu aplicación, permitiéndote elegir entre estilos Material y Cupertino.
+
+**Características**:
+
+- **Snackbars**: Muestra mensajes informativos breves en la parte inferior de la pantalla.
+- **Alertas**: Presenta información importante al usuario con un solo botón de confirmación.
+- **Diálogos de confirmación**: Pide al usuario que confirme una acción con botones de "Confirmar" y "Cancelar".
+- **Hojas de acciones (Action Sheets)**: Muestra una lista de acciones en una hoja emergente desde la parte inferior.
+- **Diálogos personalizados**: Te permite mostrar cualquier widget personalizado dentro de un diálogo.
+
+**Métodos**:
+
+- **`snackBar()`**: Muestra un Snackbar con un mensaje y una acción opcional.
+- **`materialAlertDialog()`**: Muestra un diálogo de alerta con estilo Material.
+- **`cupertinoAlertDialog()`**: Muestra un diálogo de alerta con estilo Cupertino.
+- **`materialConfirmationDialog()`**: Muestra un diálogo de confirmación con estilo Material.
+- **`cupertinoConfirmationDialog()`**: Muestra un diálogo de confirmación con estilo Cupertino.
+- **`materialActionSheet()`**: Muestra una hoja de acciones con estilo Material (usando `ListTile`).
+- **`cupertinoActionSheet()`**: Muestra una hoja de acciones con estilo Cupertino.
+- **`customDialog()`**: Muestra un diálogo personalizado con el widget que le pases.
+
+**Ejemplo**:
+
+```dart
+// Mostrar un snackbar
+JDialog.snackBar(content: Text('¡Operación exitosa!'));
+
+// Mostrar un diálogo de alerta con estilo Material
+JDialog.materialAlertDialog(
+  title: Text('Alerta'),
+  content: Text('Esto es un mensaje de alerta.'),
+);
+
+// Mostrar un diálogo de confirmación con estilo Cupertino
+JDialog.cupertinoConfirmationDialog(
+  title: Text('Confirmación'),
+  content: Text('¿Estás seguro de que quieres continuar?'),
+  onConfirm: () {
+    // ...
+  },
+);
+```
+
+**Consideraciones**:
+
+Puedes personalizar los textos de los botones, el contenido y el comportamiento de los diálogos utilizando los parámetros opcionales de cada método.
+
+La clase `JDialog` utiliza el contexto del Navigator principal de tu aplicación (JRouter.navigatorKey) para mostrar los diálogos.
+
+<br>
+
+### JConsole
+
+La clase `JConsole` te ofrece herramientas para facilitar la depuración y el análisis de tu aplicación JSM. Proporciona métodos para registrar mensajes en la consola con diferentes niveles de severidad, visualizar objetos JSON con formato, medir el tiempo de ejecución de operaciones y examinar la pila de llamadas.
+
+**Características**:
+
+- **Mensajes de registro**: Registra mensajes informativos (`log`), de error (`error`) y de advertencia (`info`) con colores distintivos en la consola.
+- **Visualización de JSON**: Formatea y muestra objetos JSON de forma legible.
+- **Medición de tiempo**: Permite medir el tiempo de ejecución de secciones de código.
+- **Inspección de la pila de llamadas**: Imprime la pila de llamadas actual para ayudarte a identificar el origen de un problema.
+
+**Métodos**:
+
+- **`log(obj, {name})`**: Registra un mensaje general en la consola (color verde). 
+- **`error(obj, {name})`**: Registra un mensaje de error en la consola (color rojo).
+- **`info(obj, {name})`**: Registra un mensaje informativo en la consola (color amarillo).
+- **`logJson(data, {name, indent})`**: Formatea y muestra un objeto JSON en la consola con indentación personalizada.
+- **`timeStart(id)`**: Inicia un temporizador con un ID único.
+- **`timeEnd(id)`**: Detiene el temporizador con el ID especificado e imprime el tiempo transcurrido.
+- **`trace()`**: Imprime la pila de llamadas actual en la consola.
+
+**Ejemplos**:
+
+```dart
+// Registrar un mensaje simple
+JConsole.log('Iniciando la aplicación...');
+
+// Registrar un error
+JConsole.error('Error al cargar los datos.');
+
+// Registrar información
+JConsole.info('Usuario autenticado correctamente.');
+
+// Mostrar un objeto JSON formateado
+Map<String, dynamic> usuario = {'nombre': 'Juan', 'edad': 30};
+JConsole.logJson(usuario);
+
+// Medir el tiempo de ejecución de una operación
+JConsole.timeStart('ordenarLista');
+// ... código para ordenar una lista
+JConsole.timeEnd('ordenarLista');
+
+// Mostrar la pila de llamadas
+JConsole.trace();
+```
+
+**Configuración**:
+
+- **debugShowReactiveLogs**: Habilita o deshabilita el registro de información detallada sobre los observables y observadores de JSM en la consola.
+
+**Consejos**:
+
+- Utiliza `JConsole` para depurar tu código, analizar el rendimiento y comprender el flujo de ejecución de tu aplicación.
+
+- Habilita `debugShowReactiveLogs` durante el desarrollo para obtener información detallada sobre el funcionamiento interno del sistema reactivo de JSM.
+
+<br>
+
+## JWorker
+
+`JWorker` te permite gestionar las suscripciones a `JObservable` y controlar la ejecución de funciones en respuesta a los cambios en los observables. Esto te da un control preciso sobre cómo y cuándo reaccionan tus componentes a las actualizaciones de estado.
+
+**Características**:
+
+- **Control de suscripciones**: `JWorker` encapsula la lógica de suscripción y desuscripción a un `JObservable`. 
+- **Frecuencia de ejecución**: JSM ofrece funciones para controlar la frecuencia con la que se ejecutan las funciones en respuesta a los cambios en el observable: ejecutar siempre (`ever`), ejecutar solo una vez (`once`), ejecutar a intervalos regulares (`interval`) y ejecutar después de un retraso (`debounce`). 
+
+**Uso**:
+
+1. **Crear un `JWorker`**: Se crea un `JWorker` utilizando una de las funciones proporcionadas (`ever`, `once`, `interval`, `debounce`), especificando el `JObservable` a observar y la función a ejecutar.
+2. **Desuscribirse**: Cuando ya no necesites la suscripción, puedes llamar al método `dispose()` del `JWorker` para cancelar la suscripción al observable.
+
+**Funciones**:
+
+- **`ever(observable, onChange)`**: Ejecuta la función `onChange` cada vez que cambia el valor del `observable`.
+- **`once(observable, onChange)`**: Ejecuta la función `onChange` solo la primera vez que cambia el valor del `observable`.
+- **`interval(observable, onChange, duration)`**: Ejecuta la función `onChange` después de un intervalo de tiempo especificado (`duration`) desde el último cambio del `observable`.
+- **`debounce(observable, onChange, duration)`**: Ejecuta la función `onChange` solo después de que el `observable` ha dejado de cambiar durante un período de tiempo especificado (`duration`).
+
+**Ejemplos**:
+
+```dart
+// Ejecutar una función cada vez que cambia el valor de un observable
+var contador = 0.observable;
+var trabajadorEver = ever<int>(
+  observable: contador,
+  onChange: (valor) => JConsole.log('El contador ha cambiado a: $valor'),
+);
+
+// Ejecutar una función solo una vez cuando cambia el valor de un observable
+var trabajadorOnce = once<int>(
+  observable: contador,
+  onChange: (valor) => JConsole.log('El valor inicial del contador es: $valor'),
+);
+
+// Ejecutar una función cada segundo después de que el observable cambie
+var trabajadorInterval = interval<int>(
+  observable: contador,
+  onChange: (valor) => JConsole.log('Valor del contador después de 1 segundo: $valor'),
+  duration: const Duration(seconds: 1),
+);
+
+// Ejecutar una función solo después de que el observable deje de cambiar durante 1 segundo
+var trabajadorDebounce = debounce<int>(
+  observable: contador,
+  onChange: (valor) => JConsole.log('Valor final del contador: $valor'),
+  duration: const Duration(seconds: 1),
+);
+
+// Desuscribirse de un trabajador
+trabajadorEver.dispose();
+```
+
+**Uso en controladores**:
+
+`JWorker` es especialmente útil en controladores para realizar acciones en respuesta a cambios en los observables, como actualizar la UI, realizar peticiones de red o ejecutar lógica de negocio.
+
+```dart
+class MiControlador extends JController {
+  var datos = [].observable;
+  late JWorker trabajadorDatos;
+
+  @override
+  void onInit() {
+    // Suscribirse al observable 'datos' y actualizar la UI cuando cambie
+    trabajadorDatos = ever<List>(
+      observable: datos,
+      onChange: (nuevosDatos) {
+        // Actualizar la UI con los nuevos datos
+        update();
+      },
+    );
+  }
+
+  @override
+  void onClose() {
+    // Desuscribirse del observable al cerrar el controlador
+    trabajadorDatos.dispose(); 
+  }
+}
+```
+
+<br>
+
+### JUtils
+
+La clase `JUtils` ofrece una amplia gama de funciones de utilidad para simplificar tareas comunes en tu aplicación Flutter, desde la generación de IDs únicos hasta la validación de datos y la manipulación de cadenas.
+
+**Categorías de funciones**:
+
+- **Generación de IDs**: Crea identificadores únicos para tus datos.
+- **Validación de datos**: Verifica la validez de diferentes tipos de datos, como correos electrónicos, URLs, números de teléfono, etc.
+- **Manipulación de cadenas**: Realiza operaciones de transformación y análisis de cadenas.
+- **Utilidades generales**: Funciones para comprobar la longitud de valores, trabajar con tipos de archivos y otras operaciones útiles.
+
+**Métodos**:
+
+**Generación de IDs**:
+
+- **`generateUniqueID([idLength])`**: Genera un ID único aleatorio de la longitud especificada (por defecto 16 caracteres).
+
+**Validación de datos**:
+
+- **`isNull(value)`**: Comprueba si un valor es nulo.
+- **`isNullOrBlank(value)`**: Comprueba si un valor es nulo o una cadena vacía o con solo espacios en blanco.
+- **`isBlank(value)`**: Comprueba si un valor es una cadena vacía o con solo espacios en blanco.
+- **`isNum(value)`**: Comprueba si una cadena representa un número (entero o decimal).
+- **`isNumericOnly(s)`**: Comprueba si una cadena contiene solo dígitos numéricos (sin puntos decimales).
+- **`isAlphabetOnly(s)`**: Comprueba si una cadena contiene solo letras del alfabeto (sin espacios).
+- **`hasCapitalLetter(s)`**: Comprueba si una cadena contiene al menos una letra mayúscula.
+- **`isBool(value)`**: Comprueba si una cadena representa un valor booleano ("true" o "false").
+- **`isFileType(filePath, type)`**: Comprueba si una ruta de archivo corresponde a un tipo de archivo específico (video, imagen, audio, etc.).
+- **`isUsername(s)`**: Comprueba si una cadena es un nombre de usuario válido.
+- **`isURL(s)`**: Comprueba si una cadena es una URL válida.
+- **`isEmail(s)`**: Comprueba si una cadena es una dirección de correo electrónico válida.
+- **`isPhoneNumber(s)`**: Comprueba si una cadena es un número de teléfono válido.
+- **`isDateTime(s)`**: Comprueba si una cadena representa una fecha y hora válidas (formato UTC o ISO8601).
+- **`isMD5(s)`**: Comprueba si una cadena es un hash MD5 válido.
+- **`isSHA1(s)`**: Comprueba si una cadena es un hash SHA1 válido.
+- **`isSHA256(s)`**: Comprueba si una cadena es un hash SHA256 válido.
+- **`isSSN(s)`**: Comprueba si una cadena es un número de Seguridad Social válido (formato estadounidense).
+- **`isBinary(s)`**: Comprueba si una cadena contiene solo caracteres binarios (0 o 1).
+- **`isIPv4(s)`**: Comprueba si una cadena es una dirección IPv4 válida.
+- **`isIPv6(s)`**: Comprueba si una cadena es una dirección IPv6 válida.
+- **`isHexadecimal(s)`**: Comprueba si una cadena es un valor hexadecimal válido (con o sin prefijo "#").
+- **`isPassport(s)`**: Comprueba si una cadena es un número de pasaporte válido.
+- **`isCurrency(s)`**: Comprueba si una cadena representa una cantidad de moneda válida.
+
+**Manipulación de cadenas**:
+
+- **`capitalizeFirst(s)`**: Convierte la primera letra de una cadena a mayúscula y el resto a minúsculas.
+- **`capitalize(s)`**: Convierte la primera letra de cada palabra de una cadena a mayúscula.
+- **`removeAllWhitespace(s)`**: Elimina todos los espacios en blanco de una cadena.
+- **`camelCase(value)`**: Convierte una cadena a formato camelCase (ejemplo: "miVariableEjemplo").
+- **`snakeCase(text, {separator})`**: Convierte una cadena a formato snake_case (ejemplo: "mi_variable_ejemplo").
+- **`paramCase(text)`**: Convierte una cadena a formato param-case (ejemplo: "mi-variable-ejemplo").
+- **`numericOnly(s, {firstWordOnly})`**: Extrae los números de una cadena, opcionalmente solo el primer grupo de números.
+
+**Utilidades generales**:
+
+- **`isLengthGreaterThan(value, maxLength)`**: Comprueba si la longitud de un valor (cadena, lista o número) es mayor que la longitud máxima especificada.
+- **`isLengthGreaterOrEqual(value, maxLength)`**: Comprueba si la longitud de un valor es mayor o igual que la longitud máxima especificada.
+- **`isLengthLessThan(value, maxLength)`**: Comprueba si la longitud de un valor es menor que la longitud máxima especificada.
+- **`isLengthLessOrEqual(value, maxLength)`**: Comprueba si la longitud de un valor es menor o igual que la longitud máxima especificada.
+- **`isLengthEqualTo(value, otherLength)`**: Comprueba si la longitud de un valor es igual a la longitud especificada.
+- **`isLengthBetween(value, minLength, maxLength)`**: Comprueba si la longitud de un valor está entre dos longitudes especificadas.
+- **`isPalindrom(s)`**: Comprueba si una cadena es un palíndromo (se lee igual de izquierda a derecha que de derecha a izquierda).
+- **`isOneAKind(value)`**: Comprueba si todos los elementos de un valor (cadena, lista o número) son iguales.
+- **`isCaseInsensitiveContains(a, b)`**: Comprueba si una cadena contiene otra cadena, ignorando las mayúsculas y minúsculas.
+- **`isCaseInsensitiveContainsAny(a, b)`**: Comprueba si una cadena contiene otra cadena o viceversa, ignorando las mayúsculas y minúsculas.
+
+**Ejemplos**:
+
+```dart
+// Generar un ID único
+String nuevoId = JUtils.generateUniqueID();
+
+// Validar una dirección de correo electrónico
+bool esCorreoValido = JUtils.isEmail('ejemplo@correo.com');
+
+// Convertir una cadena a snake_case
+String textoEnSnakeCase = JUtils.snakeCase('MiTextoDeEjemplo');
+
+// Comprobar si una lista tiene más de 5 elementos
+bool listaLarga = JUtils.isLengthGreaterThan([1, 2, 3, 4, 5, 6], 5);
 ```
 
 <br>
