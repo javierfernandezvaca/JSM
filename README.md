@@ -12,14 +12,26 @@ Está diseñada con un enfoque basado en el rendimiento y la productividad, al m
 ## Características
 
 - [Instalación](#instalación)
-- [Configuración inicial](#instalación) - `JMaterialApp` & `JPage`
+- [Configuración inicial](#instalación)
+  - `JMaterialApp`
+  - `JPage`
 - Bases de **JSM**
-  - [Gestión de estado](#gestión-de-estado) - `JBuilderWidget` & `JObserverWidget`
+  - [Gestión de estado](#gestión-de-estado)    
+    - [Simple](#administración-de-estado-simple)
+      - `JBuilderWidget` or `.builder`
+      - `update()`
+    - [Reactiva](#administración-de-estado-reactiva)
+      - `JObserverWidget` or `.observer`
+      - `.observable`
   - [Inyección de dependencias](#inyección-de-dependencias) - `JDependency`
   - [Gestión de rutas](#gestión-de-rutas) - `JRouter`
   - [Gestión de servicios](#gestión-de-servicios) - `JService`
 - [Utilidades](#utilidades)
-  - [Internacionalización](#internacionalización) - `JTranslations`
+  - [Internacionalización](#internacionalización)
+    - `JTranslations`
+    - `.tr`
+    - `JTranslateWidget` or `.translate`
+    - `JTranslateMultipleWidget` or `.translateList`
   - [Temas Visuales](#temas-visuales) - `JTheme`
   - [Diálogos](#jdialog) - `JDialog`
   - [Consola de Depuración](#jconsole) - `JConsole`
@@ -176,20 +188,21 @@ Ejemplo:
 > **Lógica de negocio**
 
 ```dart
-class MyController extends JController {
-  String message = "Hola mundo";
+class MiControlador extends JController {
+  String mensaje = 'Hola mundo';
 
-  void setMessage(String text) {
-    message = text;
-    update(['messageId']);
+  void actualizarMensaje(String texto) {
+    mensaje = texto;
+    update(['msgId']);
   }
 }
 ```
+
 Explicación:
 
-- `MyController`: Es la clase controladora que maneja el estado y la lógica de negocio.
-- `message`: Es una variable de estado que contiene el mensaje a mostrar en la interfaz de usuario.
-- `setMessage`: Es el método que actualiza el mensaje y llama a `update(['messageId'])` para notificar a los widgets que necesitan actualizarse.
+- `MiControlador`: Es la clase controladora que maneja el estado y la lógica de negocio.
+- `mensaje`: Es una variable de estado que contiene el mensaje a mostrar en la interfaz de usuario.
+- `actualizarMensaje`: Es el método que actualiza el mensaje y llama a `update` para notificar a los widgets que necesitan actualizarse.
 
 <br>
 
@@ -197,10 +210,11 @@ Explicación:
 
 ```dart
 // Método #1
-JBuilderWidget<MyController>(
-  id: 'messageId',
+// Utilizando el widget especializado (JBuilderWidget)
+JBuilderWidget<MiControlador>(
+  id: 'msgId',
   onChange: (context, controller) {
-    return Text(controller.message);
+    return Text(controller.mensaje);
   },
 )
 ```
@@ -211,13 +225,16 @@ Explicación:
 - `id`: Es el identificador único que se usa para asociar este widget con el estado específico del controlador que debe observar.
 - `onChange`: Una función que se llama cuando el estado cambia, permitiendo actualizar el widget con el nuevo estado.
 
+<br>
+
 ```dart
 // Método #2
-var controller = JDependency.find<MyController>();
+// Utilizando la extensión (.builder)
+var controller = JDependency.find<MiControlador>();
 
 controller.builder(
-  id: 'messageId',
-  onChange: (context, controller) => Text(controller.counter),
+  id: 'msgId',
+  onChange: (context, controller) => Text(controller.mensaje),
 );
 ```
 
@@ -244,6 +261,26 @@ A diferencia de la administración de estado simple, este enfoque se basa en el 
   - Este enfoque permite la creación de aplicaciones escalables y robustas, que se adaptan a las necesidades del usuario, que van desde aplicaciones simples hasta interfaces complejas con un alto volumen de datos.
   - Es fácil de integrar y se puede combinar JSM con su flujo de trabajo actual y comenzar a disfrutar de sus beneficios de inmediato.
 
+### IMPORTANTE:
+
+> Actualización manual para tipos complejos
+
+JSM utiliza un enfoque simplificado para la detección de cambios en los 
+observables:  
+
+- Para los tipos de datos primitivos (`int`, `double`, `String`, `bool`), 
+  la actualización de la UI es automática.
+- Sin embargo, para **todos los demás tipos de datos**, incluyendo 
+  listas, mapas y objetos personalizados, **debes llamar manualmente a 
+  `refresh()` después de modificar su contenido** para asegurar que la UI se actualice correctamente.
+
+Esta decisión de diseño, que prioriza la robustez, la eficiencia en escenarios de alta demanda de actualización, y la facilidad de comprensión, se fundamenta en un control preciso sobre la actualización de la interfaz de usuario. JSM adopta un enfoque pragmático para la detección de cambios: mientras que los tipos de datos primitivos se actualizan automáticamente, los tipos complejos (como listas, mapas y objetos personalizados) requieren una llamada explícita a `refresh()` después de cada modificación.
+
+Si bien esto implica una pequeña carga adicional para el desarrollador, aporta beneficios significativos:
+
+- **Mayor control y previsibilidad**: Los desarrolladores tienen un control granular sobre cuándo y cómo se actualiza la UI, evitando actualizaciones innecesarias y previniendo comportamientos inesperados.
+- **Optimización para aplicaciones de alto rendimiento**: En escenarios donde las modificaciones de datos son frecuentes, este enfoque puede mejorar significativamente el rendimiento al evitar la sobrecarga de procesamiento asociada a la detección automática de cambios en estructuras de datos complejas.
+
 <br>
 
 Ejemplo:
@@ -251,32 +288,42 @@ Ejemplo:
 > Lógica de negocio:
 
 ```dart
-class MyController extends JController {
-  var message = "Hola mundo".observable;
+class MiControlador extends JController {
+  var mensaje = 'Hola mundo'.observable;
+  var notas = [95, 100, 98].observable;
 
-  void setMessage(String text) {
-    message.value = text;
+  void actualizarMensaje(String texto) {
+    mensaje.value = texto;
+  }
+  
+  void agregarNota(int nota) {
+    notas.value.add(nota);
+    notas.refresh();
   }
 }
 ```
 
 Explicación:
 
-- `MyController`: Es la clase controladora que maneja el estado y la lógica de negocio.
-- `message`: Es la variable observable que contiene el mensaje a mostrar en la interfaz de usuario. Al ser observable, cualquier cambio en su valor notificará automáticamente a los widgets que dependen de ella.
-- `setMessage`: Es el método que actualiza el valor de message. Al cambiar el valor de message, los widgets observadores se actualizarán automáticamente.
+- `MiControlador`: Es la clase controladora que maneja el estado y la lógica de negocio.
+- `mensaje`: Es la variable observable que contiene el mensaje a mostrar en la interfaz de usuario. Al ser observable, cualquier cambio en su valor notificará automáticamente a los widgets que dependen de ella.
+- `actualizarMensaje`: Es el método que actualiza el valor de mensaje. Al cambiar el valor de mensaje, los widgets observadores se actualizarán automáticamente.
+- `notas`: Es una lista observable que contiene las notas. Al igual que mensaje, cualquier cambio en esta lista notificará a los widgets dependientes.
+- `agregarNota`: Este método añade una nueva nota a la lista notas y luego llama a `refresh()` para asegurar que los cambios se reflejen en la interfaz de usuario.
 
 <br>
 
 > Interfaz de usuario:
+
 ```dart
 // Método #1
-var controller = JDependency.find<MyController>();
+// Utilizando el widget especializado (JObserverWidget)
+var controller = JDependency.find<MiControlador>();
 // ...
 JObserverWidget<String>(
-  observable: controller.message,
-  onChange: (String message) {
-    return Text(message);
+  observable: controller.mensaje,
+  onChange: (String mensaje) {
+    return Text(mensaje);
   },
 )
 ```
@@ -288,18 +335,20 @@ Explicación:
 - `observable`: La variable observable del controlador que este widget observará.
 - `onChange`: Una función que se llama cada vez que el valor de la variable observable cambia, permitiendo actualizar el widget con el nuevo valor.
 
+<br>
 
 ```dart
 // Método #2
-var controller = JDependency.find<MyController>();
+// Utilizando la extensión (.observer)
+var controller = JDependency.find<MiControlador>();
 // ...
-controller.message.observer((String message) => Text(message))
+controller.mensaje.observer((String mensaje) => Text(mensaje))
 ```
 
 Explicación:
 
 - `controller`: Una instancia del controlador que maneja el estado y la lógica de negocio.
-- `controller.message.observer`: La extensión o método que permite observar los cambios en la variable observable `message` y actualizar el widget en consecuencia.
+- `controller.mensaje.observer`: La extensión o método que permite observar los cambios en la variable observable `mensaje` y actualizar el widget en consecuencia.
 
 <br>
 
@@ -336,9 +385,9 @@ Ejemplos:
 > **Definición de una dependencia**
 
 ```dart
-class MyDependency {
+class MiDependencia {
   // ...
-  MyDependency();
+  MiDependencia();
 }
 ```
 
@@ -346,39 +395,39 @@ class MyDependency {
 
 ```dart
 // Añadir una dependencia sin nombre de instancia
-JDependency.put<MyDependency>(MyDependency());
+JDependency.put<MiDependencia>(MiDependencia());
 
 // Añadir una dependencia con nombre de instancia
-JDependency.put<MyDependency>(MyDependency(), instanceName: 'D1');
+JDependency.put<MiDependencia>(MiDependencia(), instanceName: 'D1');
 ```
 
 > **Encontrar una dependencia**
 
 ```dart
 // Encontrar una dependencia sin nombre de instancia
-var myDependency = JDependency.find<MyDependency>();
+var miDependencia = JDependency.find<MiDependencia>();
 
 // Encontrar una dependencia con nombre de instancia
-var myDependencyNamed = JDependency.find<MyDependency>(instanceName: 'D1');
+var miDependenciaNamed = JDependency.find<MiDependencia>(instanceName: 'D1');
 ```
 > **Verificar la existencia de una dependencia**
 
 ```dart
 // Verificar si una dependencia existe sin nombre de instancia
-bool exists = JDependency.exists<MyDependency>();
+bool exists = JDependency.exists<MiDependencia>();
 
 // Verificar si una dependencia existe con nombre de instancia
-bool existsNamed = JDependency.exists<MyDependency>(instanceName: 'D1');
+bool existsNamed = JDependency.exists<MiDependencia>(instanceName: 'D1');
 ```
 
 > **Eliminar una dependencia**
 
 ```dart
 // Eliminar una dependencia (no permanente) sin nombre de instancia
-JDependency.delete<MyDependency>();
+JDependency.delete<MiDependencia>();
 
 // Eliminar una dependencia (no permanente) con nombre de instancia
-JDependency.delete<MyDependency>(instanceName: 'D1');
+JDependency.delete<MiDependencia>(instanceName: 'D1');
 ```
 
 > **Eliminar todas las dependencias**
@@ -398,7 +447,7 @@ La clase **JRouter** de JSM proporciona una serie de métodos para facilitar la 
 Para navegar a una nueva pantalla, puedes utilizar el método `toNamed()`. Este método toma el nombre de la ruta como argumento. Por ejemplo:
 
 ```dart
-JRouter.toNamed('/NextScreen');
+JRouter.toNamed('/next-screen');
 ```
 
 > **Cerrar elementos de la interfaz de usuario**
@@ -414,7 +463,7 @@ JRouter.back();
 Si necesitas navegar a una nueva pantalla y asegurarte de que el usuario no pueda volver a la pantalla anterior (útil, por ejemplo, en SplashScreens, LoginScreen, etc.), puedes utilizar el método `offNamed()`. Este método reemplaza la ruta actual con la nueva ruta. Por ejemplo:
 
 ```dart
-JRouter.offNamed('/NextScreen');
+JRouter.offNamed('/next-screen');
 ```
 
 > **Navegar a la siguiente pantalla y cancelar todas las rutas anteriores**
@@ -422,7 +471,7 @@ JRouter.offNamed('/NextScreen');
 Si necesitas navegar a una nueva pantalla y eliminar todas las rutas anteriores de la pila de navegación (útil en carritos de compras, encuestas y exámenes), puedes utilizar el método `offAllNamed()`. Por ejemplo:
 
 ```dart
-JRouter.offAllNamed('/NextScreen');
+JRouter.offAllNamed('/next-screen');
 ```
 
 > **Navegar a la siguiente ruta y recibir o actualizar datos tan pronto como se regrese de ella**
@@ -430,7 +479,7 @@ JRouter.offAllNamed('/NextScreen');
 Si necesitas navegar a una nueva ruta y esperar un resultado cuando se regrese de ella, puedes utilizar el método `toNamed()` y esperar el resultado. Por ejemplo:
 
 ```dart
-var data = await JRouter.toNamed('/Payment');
+var datos = await JRouter.toNamed('/next-screen');
 ```
 
 <br>
@@ -454,7 +503,7 @@ Ejemplos:
 > **Definición de un servicio**
 
 ```dart
-class MyService extends JService {  
+class MiServicio extends JService {  
   @override
   Future<void> onInit() async {
     // Inicialización del servicio
@@ -471,40 +520,40 @@ class MyService extends JService {
 
 ```dart
 // Iniciar un servicio sin nombre de instancia
-await JService.start<MyService>(MyService());
+await JService.start<MiServicio>(MiServicio());
 
 // Iniciar un servicio con nombre de instancia
-await JService.start<MyService>(MyService(), instanceName: 'S1');
+await JService.start<MiServicio>(MiServicio(), instanceName: 'S1');
 ```
 
 > **Detener un servicio**
 
 ```dart
 // Detener un servicio sin nombre de instancia
-await JService.stop<MyService>();
+await JService.stop<MiServicio>();
 
 // Detener un servicio con nombre de instancia
-await JService.stop<MyService>(instanceName: 'S1');
+await JService.stop<MiServicio>(instanceName: 'S1');
 ```
 
 > **Encontrar un servicio**
 
 ```dart
 // Encontrar un servicio sin nombre de instancia
-var myService = JService.find<MyService>();
+var miServicio = JService.find<MiServicio>();
 
 // Encontrar un servicio con nombre de instancia
-var myServiceNamed = JService.find<MyService>(instanceName: 'S1');
+var miServicioNamed = JService.find<MiServicio>(instanceName: 'S1');
 ```
 
 > **Verificar si un servicio está en ejecución**
 
 ```dart
 // Verificar si un servicio está en ejecución sin nombre de instancia
-bool isRunning = JService.isRunning<MyService>();
+bool isRunning = JService.isRunning<MiServicio>();
 
 // Verificar si un servicio está en ejecución con nombre de instancia
-bool isRunningNamed = JService.isRunning<MyService>(instanceName: 'S1');
+bool isRunningNamed = JService.isRunning<MiServicio>(instanceName: 'S1');
 ```
 
 > **Detener todos los servicios**
@@ -735,8 +784,10 @@ JConsole.trace();
 **Ejemplos**:
 
 ```dart
-// Ejecutar una función cada vez que cambia el valor de un observable
+// Contador
 var contador = 0.observable;
+
+// Ejecutar una función cada vez que cambia el valor de un observable
 var trabajadorEver = ever<int>(
   observable: contador,
   onChange: (valor) => JConsole.log('El contador ha cambiado a: $valor'),

@@ -1,4 +1,4 @@
-import 'package:collection/collection.dart';
+// import 'package:collection/collection.dart';
 
 import '../jconsole/jconsole.dart';
 import '../jutils/jutils.dart';
@@ -98,13 +98,25 @@ class JObservable<T> extends JObservableBase<T> {
     }
   }
 
-  // Compara dos valores y devuelve `true` si los valores son iguales,
-  // `false` en caso contrario.
+  /// Comprueba si dos valores se consideran "iguales" para determinar si se
+  /// debe notificar a los observadores sobre un cambio.
+  ///
+  /// Actualmente, este método siempre devuelve `true` para los tipos de datos
+  /// primitivos (`int`, `double`, `String`, `bool`) si son iguales según el
+  /// operador `==`.
+  ///
+  /// Para todos los demás tipos, incluyendo listas, mapas y objetos
+  /// personalizados, este método **siempre devuelve `false`**.  Esto
+  /// significa que cualquier modificación en un tipo no primitivo se
+  /// considera un cambio que requiere notificación a los observadores,
+  /// y se debe llamar manualmente a `refresh()` después de realizar
+  /// la modificación.
   bool _isEqual(T x, T y) {
     if (x is int || x is double || x is String || x is bool) {
       return x == y;
     } else {
-      return const DeepCollectionEquality().equals(x, y);
+      // return const DeepCollectionEquality().equals(x, y);
+      return false;
     }
   }
 
