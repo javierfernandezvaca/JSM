@@ -3,176 +3,142 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 
-// Colores utilizados en la consola de depuración.
-enum _JConsoleColor { green, yellow, red, reset }
+import 'ansi_color.dart';
 
-// Nombre predeterminado para los mensajes de la consola.
+/// Nombre por defecto utilizado para identificar los mensajes de la consola.
 const String _defaultName = 'JSM';
 
-// Códigos de los color para cada mensaje de la consola.
-final Map<_JConsoleColor, String> _colorCodes = {
-  _JConsoleColor.green: '\x1B[32m',
-  _JConsoleColor.yellow: '\x1B[33m',
-  _JConsoleColor.red: '\x1B[31m',
-  _JConsoleColor.reset: '\x1B[0m',
-};
-
-/// Consola de depuración.
+/// Consola de depuración con soporte para logs coloreados, medición de tiempos,
+/// y trazas de pila.
 ///
-/// Esta clase proporciona métodos para registrar mensajes, información y
-/// errores en la consola de depuración; asi como de utilidades para el
-/// registro de tiempos y de las aciones en la pila de llamadas de las
-/// aplicaciones.
+/// Esta clase no debe ser instanciada. Todos los métodos son estáticos.
 class JConsole {
-  /// Mostrar en la consola la información de los registros reactivos.
+  /// Habilita/deshabilita los logs reactivos en la consola.
   ///
-  /// Mostrar en la consola la información (los registros reactivos) de
-  /// los observables y sus observadores.
+  /// Cuando está activado, muestra logs detallados de los observables y sus
+  /// observadores.
   static bool debugShowReactiveLogs = false;
 
-  /// Este método registra un mensaje en la consola de depuración de
-  /// color verde.
+  static final _colorGreen = AnsiColor.fg(34);
+  static final _colorYellow = AnsiColor.fg(220);
+  static final _colorRed = AnsiColor.fg(196);
+
+  /// Registra un mensaje de log en color verde.
   ///
-  /// Parámetros:
-  /// - `obj`: El objeto a registrar.
-  /// - `name`: El nombre del registro en consola.
+  /// Útil para mensajes generales de depuración.
   ///
   /// Ejemplo:
   /// ```dart
-  /// JConsole.log('Hello...!!');
+  /// JConsole.log('Usuario autenticado: $user');
   /// ```
   static void log(
     dynamic obj, {
     String name = _defaultName,
   }) {
     if (kDebugMode) {
-      developer.log(
-          '${_colorCodes[_JConsoleColor.green]}$obj${_colorCodes[_JConsoleColor.reset]}',
-          name: name);
+      _printColored(_colorGreen, obj, name);
     }
   }
 
-  /// Este método registra un mensaje en la consola de depuración de
-  /// color rojo.
+  /// Registra un mensaje de error en color rojo.
   ///
-  /// Parámetros:
-  /// - `obj`: El objeto a registrar.
-  /// - `name`: El nombre del registro en consola.
+  /// Ideal para capturar excepciones o estados no recuperables.
   ///
   /// Ejemplo:
   /// ```dart
-  /// JConsole.error('Error...');
+  /// try {
+  ///   // Código riesgoso
+  /// } catch (e) {
+  ///   JConsole.error('Fallo en la operación: $e');
+  /// }
   /// ```
   static void error(
     dynamic obj, {
     String name = _defaultName,
   }) {
     if (kDebugMode) {
-      developer.log(
-          '${_colorCodes[_JConsoleColor.red]}$obj${_colorCodes[_JConsoleColor.reset]}',
-          name: name);
+      _printColored(_colorRed, obj, name);
     }
   }
 
-  /// Este método registra un mensaje en la consola de depuración de
-  /// color amarillo.
+  /// Registra un mensaje informativo en color amarillo.
   ///
-  /// Parámetros:
-  /// - `obj`: El objeto a registrar.
-  /// - `name`: El nombre del registro en consola.
+  /// Útil para advertencias o eventos que no son errores críticos.
   ///
   /// Ejemplo:
   /// ```dart
-  /// JConsole.info('Information...');
+  /// JConsole.info('Conexión inestable: reintentando...');
   /// ```
   static void info(
     dynamic obj, {
     String name = _defaultName,
   }) {
     if (kDebugMode) {
-      developer.log(
-          '${_colorCodes[_JConsoleColor.yellow]}$obj${_colorCodes[_JConsoleColor.reset]}',
-          name: name);
+      _printColored(_colorYellow, obj, name);
     }
   }
 
-  /// Este método registra un objeto JSON en la consola de depuración con un
-  /// formato de indentación personalizada.
+  static void _printColored(AnsiColor color, dynamic obj, String name) {
+    final message = color('$obj');
+    if (kDebugMode) {
+      print('[$name] $message');
+    }
+  }
+
+  /// Formatea y registra un objeto JSON con indentación personalizada.
   ///
-  /// Parámetros:
-  /// - `json`: El objeto JSON a registrar.
-  /// - `name`: El nombre del registro en consola.
-  /// - `indent`: La cantidad de espacios para la indentación. Por defecto es 2.
+  /// Lanza un error si el objeto no es serializable.
   ///
   /// Ejemplo:
   /// ```dart
-  /// var json = {
-  ///   'clave': 'valor'
-  /// };
-  ///
-  /// JConsole.logJson(json, indent: 4);
+  /// JConsole.logJson({'id': 1, 'name': 'Alice'}, indent: 4);
   /// ```
   static void logJson(
     dynamic data, {
     String name = _defaultName,
     int indent = 2,
   }) {
-    var encoder = JsonEncoder.withIndent(' ' * indent);
-    var formattedJson = encoder.convert(data);
-    log(formattedJson, name: name);
+    if (data == null) {
+      log('null', name: name);
+    } else {
+      try {
+        final encoder = JsonEncoder.withIndent(' ' * indent);
+        log(encoder.convert(data), name: name);
+      } catch (e) {
+        error('Failed to encode JSON: $e', name: name);
+      }
+    }
   }
 
   // ...
 
-  static final _timestamps = <String, DateTime>{};
+  static final _stopwatches = <String, Stopwatch>{};
 
-  /// Registro de tiempo (Inicio).
+  /// Inicia un temporizador asociado a un [id] único.
   ///
-  /// Métodos para registrar el inicio de ciertas operaciones, y calcular
-  /// cuánto tiempo tardan. Esto es útil para la depuración de rendimiento
-  /// en las aplicaciones.
+  /// Utiliza [timeEnd] con el mismo [id] para medir la duración.
   ///
-  /// Parámetros:
-  /// - `id`: El identificador del registro de tiempo.
-  ///
-  /// Ejemplo:
-  /// ```dart
-  /// JConsole.timeStart('Bubble Sort');
-  /// ```
+  /// Precisión: Microsegundos (usando `Stopwatch`).
   static void timeStart(String id) {
-    _timestamps[id] = DateTime.now();
+    _stopwatches[id] = Stopwatch()..start();
   }
 
-  /// Registro de tiempo (Final).
+  /// Detiene el temporizador asociado a [id] y registra la duración.
   ///
-  /// Métodos para registrar el fin de ciertas operaciones, y calcular
-  /// cuánto tiempo tardan. Esto es útil para la depuración de rendimiento
-  /// en las aplicaciones.
-  ///
-  /// Parámetros:
-  /// - `id`: El identificador del registro de tiempo.
-  ///
-  /// Ejemplo:
-  /// ```dart
-  /// JConsole.timeEnd('Bubble Sort');
-  /// ```
+  /// Si el [id] no existe, registra un error.
   static void timeEnd(String id) {
-    final start = _timestamps[id];
-    if (start != null) {
-      final duration = DateTime.now().difference(start);
-      log('Time $id: ${duration.inMilliseconds} ms');
+    final sw = _stopwatches.remove(id);
+    if (sw != null) {
+      sw.stop();
+      log('Time $id: ${sw.elapsedMicroseconds} μs');
+    } else {
+      error('Timer "$id" was never started');
     }
   }
 
-  // Registro de pila de llamadas.
-  //
-  // Método para registrar la pila de llamadas actual. Útil para depurar
-  // problemas complejos en las aplicaciones.
+  /// Captura y registra la pila de llamadas actual.
   ///
-  /// Ejemplo:
-  /// ```dart
-  /// JConsole.trace();
-  /// ```
+  /// Útil para depurar flujos complejos o identificar el origen de un error.
   static void trace() {
     if (kDebugMode) {
       developer.log('\n${StackTrace.current}', name: 'Stack Trace');
