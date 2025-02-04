@@ -85,25 +85,40 @@ class JConsole {
     }
   }
 
-  /// Formatea y registra un objeto JSON con indentación personalizada.
+  /// Formatea y registra un objeto JSON con indentación personalizada o en
+  /// formato compacto.
   ///
   /// Lanza un error si el objeto no es serializable.
   ///
-  /// Ejemplo:
+  /// Ejemplo (con indentación):
   /// ```dart
   /// JConsole.logJson({'id': 1, 'name': 'Alice'}, indent: 4);
+  /// ```
+  ///
+  /// Ejemplo (sin indentación):
+  /// ```dart
+  /// JConsole.logJson({'id': 1, 'name': 'Alice'}, prettyPrint: false);
   /// ```
   static void logJson(
     dynamic data, {
     String name = _defaultName,
     int indent = 2,
+    bool prettyPrint = true,
   }) {
     if (data == null) {
       log('null', name: name);
     } else {
       try {
-        final encoder = JsonEncoder.withIndent(' ' * indent);
-        log(encoder.convert(data), name: name);
+        String jsonString;
+        if (prettyPrint) {
+          // Formato legible con indentación
+          final encoder = JsonEncoder.withIndent(' ' * indent);
+          jsonString = encoder.convert(data);
+        } else {
+          // Formato compacto
+          jsonString = json.encode(data);
+        }
+        log(jsonString, name: name);
       } catch (e) {
         error('Failed to encode JSON: $e', name: name);
       }
@@ -133,6 +148,27 @@ class JConsole {
       log('Time $id: ${sw.elapsedMicroseconds} μs');
     } else {
       error('Timer "$id" was never started');
+    }
+  }
+
+  /// Registra el tiempo transcurrido para el temporizador asociado a [id].
+  ///
+  /// No detiene el temporizador, lo que permite medir puntos intermedios.
+  ///
+  /// Ejemplo:
+  /// ```dart
+  /// JConsole.timeStart('fetchData');
+  /// // Código que tarda un tiempo...
+  /// JConsole.timeLog('fetchData'); // Registra el tiempo transcurrido hasta aquí
+  /// // Más código...
+  /// JConsole.timeEnd('fetchData'); // Registra el tiempo total
+  /// ```
+  static void timeLog(String id) {
+    final sw = _stopwatches[id];
+    if (sw != null && sw.isRunning) {
+      log('Intermediate time for $id: ${sw.elapsedMicroseconds} μs');
+    } else {
+      error('Timer "$id" is not running or was never started');
     }
   }
 
