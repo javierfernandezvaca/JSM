@@ -16,8 +16,10 @@ import 'jinstance.dart';
 /// las dependencias permanentes no pueden ser eliminadas.
 class JDependency {
   static final Map<String, JInstance> _dependencies = {};
-  static String _getKey<T>() {
-    return T.toString();
+
+  /// Genera una clave única para una dependencia.
+  static String _getKey<T>({String? instanceName}) {
+    return '${T.toString()}${instanceName ?? ''}';
   }
 
   /// Añade una dependencia al mapa de dependencias.
@@ -42,13 +44,15 @@ class JDependency {
     bool permanent = false,
     String? instanceName,
   }) {
-    final key = _getKey<T>() + (instanceName ?? '');
+    final key = _getKey<T>(instanceName: instanceName);
     if (!_dependencies.containsKey(key)) {
       JConsole.info('$T created');
       _dependencies[key] = JInstance(
         instance: instance,
         permanent: permanent,
       );
+    } else {
+      throw Exception('$T already exists and will not be overwritten.');
     }
   }
 
@@ -67,9 +71,9 @@ class JDependency {
   /// var myDependency2 = JDependency.find<MyDependency>(instanceName: 'D2');
   /// ```
   static T find<T>({String? instanceName}) {
-    final key = _getKey<T>() + (instanceName ?? '');
+    final key = _getKey<T>(instanceName: instanceName);
     if (_dependencies.containsKey(key)) {
-      return _dependencies[key]!.instance;
+      return _dependencies[key]!.instance as T;
     } else {
       throw Exception(
           'Dependency of type $key not found. Please make sure the dependency is added before trying to access it.');
@@ -91,7 +95,7 @@ class JDependency {
   /// var exist2 = JDependency.exists<MyDependency>(instanceName: 'D1');
   /// ```
   static bool exists<T>({String? instanceName}) {
-    final key = _getKey<T>() + (instanceName ?? '');
+    final key = _getKey<T>(instanceName: instanceName);
     return _dependencies.containsKey(key);
   }
 
@@ -109,16 +113,30 @@ class JDependency {
   /// JDependency.delete<MyDependency>();
   /// JDependency.delete<MyDependency>(instanceName: 'D1');
   /// ```
+  // static void delete<T>({String? instanceName}) {
+  //   final key = _getKey<T>() + (instanceName ?? '');
+  //   if (_dependencies.containsKey(key) && !_dependencies[key]!.permanent) {
+  //     JConsole.info('$T deleted');
+  //     _dependencies.remove(key);
+  //   } else if (_dependencies.containsKey(key) &&
+  //       _dependencies[key]!.permanent) {
+  //     JConsole.info('$T is permanent and cannot be deleted');
+  //   } else {
+  //     JConsole.info('$T does not exist');
+  //   }
+  // }
   static void delete<T>({String? instanceName}) {
-    final key = _getKey<T>() + (instanceName ?? '');
-    if (_dependencies.containsKey(key) && !_dependencies[key]!.permanent) {
-      JConsole.info('$T deleted');
-      _dependencies.remove(key);
-    } else if (_dependencies.containsKey(key) &&
-        _dependencies[key]!.permanent) {
-      JConsole.info('$T is permanent and cannot be deleted');
+    final key = _getKey<T>(instanceName: instanceName);
+    if (_dependencies.containsKey(key)) {
+      final instance = _dependencies[key]!;
+      if (!instance.permanent) {
+        JConsole.info('$T deleted');
+        _dependencies.remove(key);
+      } else {
+        JConsole.error('$T is permanent and cannot be deleted');
+      }
     } else {
-      JConsole.info('$T does not exist');
+      JConsole.error('$T does not exist');
     }
   }
 
@@ -132,5 +150,19 @@ class JDependency {
   static void clear() {
     JConsole.info('Delete all dependencies');
     _dependencies.clear();
+  }
+
+  /// Devuelve una lista de todas las dependencias registradas.
+  ///
+  /// Ejemplo:
+  ///
+  /// ```dart
+  /// var allDependencies = JDependency.listAll();
+  /// ```
+  static Map<String, dynamic> listAll() {
+    return Map.fromEntries(
+      _dependencies.entries
+          .map((entry) => MapEntry(entry.key, entry.value.instance)),
+    );
   }
 }

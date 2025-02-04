@@ -14,7 +14,8 @@ class JInstance<T> {
   final T instance;
 
   /// El estado de permanencia de la instancia.
-  bool permanent;
+  bool get permanent => _permanent;
+  final bool _permanent;
 
   /// Crea una instancia de JInstance.
   ///
@@ -22,6 +23,6 @@ class JInstance<T> {
   /// de permanencia.
   JInstance({
     required this.instance,
-    this.permanent = false,
-  });
+    bool permanent = false,
+  }) : _permanent = permanent;
 }
