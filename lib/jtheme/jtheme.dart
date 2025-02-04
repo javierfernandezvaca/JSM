@@ -56,7 +56,7 @@ class JTheme {
   /// var temaClaro = JTheme.lightTheme;
   /// ```
   static ThemeData get lightTheme => _lightTheme;
-  static final _lightTheme = ThemeData.light();
+  static ThemeData _lightTheme = ThemeData.light();
 
   /// Establece un nuevo tema claro.
   ///
@@ -68,7 +68,10 @@ class JTheme {
   /// JTheme.lightTheme = ThemeData.light();
   /// ```
   static set lightTheme(ThemeData theme) {
-    lightTheme = theme;
+    _lightTheme = theme;
+    if (currentTheme.value == _lightTheme) {
+      currentTheme.value = theme;
+    }
   }
 
   /// Obtiene el tema oscuro actual.
@@ -78,7 +81,7 @@ class JTheme {
   /// var temaOscuro = JTheme.darkTheme;
   /// ```
   static ThemeData get darkTheme => _darkTheme;
-  static final _darkTheme = ThemeData.dark();
+  static ThemeData _darkTheme = ThemeData.dark();
 
   /// Establece un nuevo tema oscuro.
   ///
@@ -90,6 +93,24 @@ class JTheme {
   /// JTheme.darkTheme = ThemeData.dark();
   /// ```
   static set darkTheme(ThemeData theme) {
-    darkTheme = theme;
+    _darkTheme = theme;
+    if (currentTheme.value == _darkTheme) {
+      currentTheme.value = theme;
+    }
+  }
+
+  /// Restablece los temas claro y oscuro a sus valores predeterminados.
+  ///
+  /// Ejemplo:
+  /// ```dart
+  /// JTheme.resetThemes();
+  /// ```
+  static void resetThemes() {
+    _lightTheme = ThemeData.light();
+    _darkTheme = ThemeData.dark();
+    if (currentTheme.value == _lightTheme || currentTheme.value == _darkTheme) {
+      // Restablece al tema claro por defecto
+      currentTheme.value = _lightTheme;
+    }
   }
 }
