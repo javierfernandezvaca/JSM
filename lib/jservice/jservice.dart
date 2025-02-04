@@ -16,7 +16,9 @@ abstract class JService extends JDisposableInterface {
   static final Map<String, dynamic> _services = {};
 
   /// Genera una clave única para cada tipo de servicio.
-  static String _getKey<T>() => T.toString();
+  static String _getKey<T>({String? instanceName}) {
+    return '${T.toString()}${instanceName ?? ''}';
+  }
 
   /// Método para iniciar el servicio.
   ///
@@ -44,7 +46,7 @@ abstract class JService extends JDisposableInterface {
   /// ```
   static Future<void> start<T extends JService>(T instance,
       {String? instanceName}) async {
-    final key = _getKey<T>() + (instanceName ?? '');
+    final key = _getKey<T>(instanceName: instanceName);
     if (!_services.containsKey(key)) {
       T service = instance;
       _services[key] = service;
@@ -68,7 +70,7 @@ abstract class JService extends JDisposableInterface {
   /// await JService.stop<MyService>(instanceName: 'S1');
   /// ```
   static Future<void> stop<T extends JService>({String? instanceName}) async {
-    final key = _getKey<T>() + (instanceName ?? '');
+    final key = _getKey<T>(instanceName: instanceName);
     if (_services.containsKey(key)) {
       await (_services[key] as JService).onClose();
       _services.remove(key);
@@ -91,9 +93,15 @@ abstract class JService extends JDisposableInterface {
   /// var myService2 = JService.find<MyService>(instanceName: 'S2');
   /// ```
   static T find<T extends JService>({String? instanceName}) {
-    final key = _getKey<T>() + (instanceName ?? '');
+    final key = _getKey<T>(instanceName: instanceName);
     if (_services.containsKey(key)) {
-      return _services[key];
+      final service = _services[key];
+      if (service is T) {
+        return service;
+      } else {
+        throw Exception(
+            'The service $T was found but its type does not match the expected type.');
+      }
     } else {
       throw Exception(
           'The service $T was not found. Please make sure the service is started before trying to access it.');
@@ -115,7 +123,7 @@ abstract class JService extends JDisposableInterface {
   /// var isRunning2 = JService.isRunning<MyService>(instanceName: 'S1');
   /// ```
   static bool isRunning<T extends JService>({String? instanceName}) {
-    final key = _getKey<T>() + (instanceName ?? '');
+    final key = _getKey<T>(instanceName: instanceName);
     return _services.containsKey(key);
   }
 
@@ -128,8 +136,26 @@ abstract class JService extends JDisposableInterface {
   /// ```
   static void stopAll() {
     _services.forEach((key, service) {
-      (service as JService).onClose();
+      try {
+        (service as JService).onClose();
+        JConsole.info('$key stopped');
+      } catch (e) {
+        JConsole.error('Failed to stop $key: ${e.toString()}');
+      }
     });
     _services.clear();
+  }
+
+  /// Devuelve una lista de todos los servicios registrados.
+  ///
+  /// Ejemplo:
+  ///
+  /// ```dart
+  /// var allServices = JService.listAll();
+  /// ```
+  static Map<String, dynamic> listAll() {
+    return Map.fromEntries(
+      _services.entries.map((entry) => MapEntry(entry.key, entry.value)),
+    );
   }
 }
