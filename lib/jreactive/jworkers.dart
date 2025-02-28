@@ -3,36 +3,33 @@ import 'dart:async';
 import 'jobservables.dart';
 import 'jobservers.dart';
 
-/// Una clase para gestionar la suscripción a un observable.
+/// Clase para gestionar la suscripción a un observable.
 ///
-/// Esta clase proporciona un método para desuscribirse del observable.
-///
-/// Ejemplo:
-/// ```dart
-/// var miTrabajador = JWorker(miFuncionParaDesuscribir);
-/// ```
+/// Esta clase encapsula una función de desuscripción (`unsubscribe`) que permite
+/// liberar recursos cuando ya no se necesita observar un observable.
 class JWorker {
-  /// La función para desuscribirse del observable.
+  /// Función para desuscribirse del observable.
   ///
-  /// Esta es una función que se puede llamar para desuscribirse
-  /// del observable.
+  /// Esta función debe ser llamada para cancelar la suscripción al observable
+  /// y evitar fugas de memoria o comportamientos inesperados.
   final void Function() unsubscribe;
 
-  /// Crea un trabajador con una función para desuscribirse.
-  ///
-  /// Este constructor toma una función para desuscribirse y crea una
-  /// instancia de `JWorker`.
+  /// Crea una instancia de `JWorker` con una función de desuscripción.
   ///
   /// Parámetros:
-  ///   `unsubscribe`: La función para desuscribirse del observable.
+  /// - [unsubscribe]: La función que se ejecutará para cancelar la suscripción.
   ///
   /// Ejemplo:
   /// ```dart
-  /// var miTrabajador = JWorker(miFuncionParaDesuscribir);
+  /// var miTrabajador = JWorker(() {
+  ///   print('Desuscribiendo...');
+  /// });
   /// ```
   JWorker(this.unsubscribe);
 
   /// Desuscribe al trabajador del observable.
+  ///
+  /// Este método llama a la función `unsubscribe` proporcionada en el constructor.
   ///
   /// Ejemplo:
   /// ```dart
@@ -45,22 +42,24 @@ class JWorker {
 
 // ...
 
-/// Crea un trabajador que se suscribe a un observable y llama a una función
-/// cada vez que el valor del observable cambia.
+/// Crea un trabajador que se suscribe a un observable y reacciona a cada cambio.
 ///
-/// Devuelve un trabajador que puede ser usado para desuscribirse
-/// del observable.
+/// Este método crea un observador que llama a una función cada vez que el valor
+/// del observable cambia. Devuelve un `JWorker` que puede ser utilizado para
+/// cancelar la suscripción.
 ///
 /// Parámetros:
-///   `observable`: El observable al que se va a suscribir el trabajador.
-///   `onChange`: La función que se llama cada vez que el valor del
-///               observable cambia.
+/// - [observable]: El observable al que se desea suscribir.
+/// - [onChange]: La función que se ejecuta cada vez que el valor del observable cambia.
+///
+/// Retorna:
+/// - Un `JWorker` que permite cancelar la suscripción.
 ///
 /// Ejemplo:
 /// ```dart
 /// var miTrabajador = ever<int>(
 ///   observable: miObservable,
-///   onChange: (value) => print('$value'),
+///   onChange: (value) => print('Valor actual: $value'),
 /// );
 /// ```
 JWorker ever<T>({
@@ -71,14 +70,12 @@ JWorker ever<T>({
   return JWorker(unsubscribe);
 }
 
-/// Un observador que llama a una función cada vez que se le notifica
-/// un nuevo valor.
+/// Observador interno que llama a una función cada vez que se notifica un nuevo valor.
 class _EverObserver<T> extends JObserverBase<T> {
   /// La función a llamar cuando se notifica un nuevo valor.
   final Function(T) onChange;
 
-  /// Crea un observador con una función a llamar cuando se notifica
-  /// un nuevo valor.
+  /// Función que se ejecuta cuando se notifica un nuevo valor.
   _EverObserver(this.onChange);
 
   /// Llama a la función con el nuevo valor.
@@ -90,22 +87,24 @@ class _EverObserver<T> extends JObserverBase<T> {
 
 // ...
 
-/// Crea un trabajador que se suscribe a un observable y llama a una función
-/// solo la primera vez que el valor del observable cambia.
+/// Crea un trabajador que reacciona solo al primer cambio en un observable.
 ///
-/// Devuelve un trabajador que puede ser usado para desuscribirse
-/// del observable.
+/// Este método crea un observador que llama a una función solo la primera vez
+/// que el valor del observable cambia. Devuelve un `JWorker` que puede ser
+/// utilizado para cancelar la suscripción.
 ///
 /// Parámetros:
-///   `observable`: El observable al que se va a suscribir el trabajador.
-///   `onChange`: La función que se llama solo la primera vez que el
-///               valor del observable cambia.
+/// - [observable]: El observable al que se desea suscribir.
+/// - [onChange]: La función que se ejecuta solo la primera vez que el valor cambia.
+///
+/// Retorna:
+/// - Un `JWorker` que permite cancelar la suscripción.
 ///
 /// Ejemplo:
 /// ```dart
 /// var miTrabajador = once<int>(
 ///   observable: miObservable,
-///   onChange: (value) => print('$value'),
+///   onChange: (value) => print('Primer cambio: $value'),
 /// );
 /// ```
 JWorker once<T>({
@@ -122,15 +121,12 @@ JWorker once<T>({
   return JWorker(unsubscribe);
 }
 
-/// Un observador que llama a una función solo la primera vez que se
-/// le notifica un nuevo valor.
+/// Observador interno que reacciona solo al primer cambio en un observable.
 class _OnceObserver<T> extends JObserverBase<T> {
-  /// La función a llamar cuando se notifica un nuevo valor por
-  /// primera vez.
+  /// Función que se ejecuta cuando se notifica un nuevo valor por primera vez.
   final Function(T) onChange;
 
-  /// Crea un observador con una función a llamar cuando se notifica
-  /// un nuevo valor por primera vez.
+  /// Crea un observador con una función para manejar el primer cambio.
   _OnceObserver(this.onChange);
 
   /// Llama a la función con el nuevo valor.
@@ -142,23 +138,25 @@ class _OnceObserver<T> extends JObserverBase<T> {
 
 // ...
 
-/// Crea un trabajador que se suscribe a un observable y llama a una
-/// función solo después de que ha pasado un cierto período de tiempo
-/// desde el último cambio en el valor del observable.
+/// Crea un trabajador que reacciona solo después de un período de tiempo desde el último cambio.
+///
+/// Este método crea un observador que llama a una función solo si ha pasado un cierto período
+/// de tiempo desde el último cambio en el observable. Devuelve un `JWorker` que puede ser
+/// utilizado para cancelar la suscripción.
 ///
 /// Parámetros:
-///   `observable`: El observable al que se va a suscribir el trabajador.
-///   `onChange`: La función que se llama después de que ha pasado un cierto
-///               período de tiempo desde el último cambio en el valor del
-///               observable.
-///   `duration`: La duración del período de tiempo que debe pasar antes de
-///               llamar a la función.
+/// - [observable]: El observable al que se desea suscribir.
+/// - [onChange]: La función que se ejecuta después del período de tiempo.
+/// - [duration]: El período de tiempo que debe transcurrir antes de llamar a la función.
+///
+/// Retorna:
+/// - Un `JWorker` que permite cancelar la suscripción.
 ///
 /// Ejemplo:
 /// ```dart
 /// var miTrabajador = interval<int>(
 ///   observable: miObservable,
-///   onChange: (value) => print('$value'),
+///   onChange: (value) => print('Valor después de 1 segundo: $value'),
 ///   duration: Duration(seconds: 1),
 /// );
 /// ```
@@ -183,14 +181,13 @@ JWorker interval<T>({
   });
 }
 
-/// Un observador que llama a una función solo después de que ha pasado
-/// un cierto período de tiempo desde el último cambio en el valor del
-/// observable.
+/// Observador interno que reacciona solo después de un período de tiempo desde el último cambio.
 class _IntervalObserver<T> extends JObserverBase<T> {
   final Function(T) onChange;
 
   _IntervalObserver(this.onChange);
 
+  /// Llama a la función con el nuevo valor.
   @override
   void notify(T value) {
     onChange(value);
@@ -199,25 +196,25 @@ class _IntervalObserver<T> extends JObserverBase<T> {
 
 // ...
 
-/// Implementación de 'debounce'
+/// Crea un trabajador que reacciona solo después de que el observable deja de cambiar durante un período.
 ///
-/// Crea un trabajador que se suscribe a un observable y llama a una función
-/// solo después de que el valor del observable ha dejado de cambiar durante
-/// un cierto período de tiempo.
+/// Este método crea un observador que llama a una función solo si el valor del observable no ha cambiado
+/// durante un cierto período de tiempo. Devuelve un `JWorker` que puede ser utilizado para cancelar la
+/// suscripción.
 ///
 /// Parámetros:
-///   `observable`: El observable al que se va a suscribir el trabajador.
-///   `onChange`: La función que se llama solo después de que el valor del
-///               observable ha dejado de cambiar durante un cierto período
-///               de tiempo.
-///   `duration`: La duración de la pausa requerida antes de llamar a
-///               la función.
+/// - [observable]: El observable al que se desea suscribir.
+/// - [onChange]: La función que se ejecuta después de la pausa.
+/// - [duration]: El período de tiempo que debe transcurrir sin cambios antes de llamar a la función.
+///
+/// Retorna:
+/// - Un `JWorker` que permite cancelar la suscripción.
 ///
 /// Ejemplo:
 /// ```dart
 /// var miTrabajador = debounce<int>(
 ///   observable: miObservable,
-///   onChange: (value) => print('$value'),
+///   onChange: (value) => print('Valor estable: $value'),
 ///   duration: Duration(seconds: 1),
 /// );
 /// ```
@@ -237,13 +234,13 @@ JWorker debounce<T>({
   });
 }
 
-/// Un observador que llama a una función solo después de que el valor del
-/// observable ha dejado de cambiar durante un cierto período de tiempo.
+/// Observador interno que reacciona solo después de que el observable deja de cambiar durante un período.
 class _DebounceObserver<T> extends JObserverBase<T> {
   final Function(T) onChange;
 
   _DebounceObserver(this.onChange);
 
+  /// Llama a la función con el nuevo valor.
   @override
   void notify(T value) {
     onChange(value);

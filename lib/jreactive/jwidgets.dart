@@ -5,18 +5,43 @@ import '../jutils/jutils.dart';
 import 'jobservables.dart';
 import 'jobservers.dart';
 
-/// Un widget que observa los cambios en un `JObservableBase`.
+/// Widget que observa los cambios en un `JObservableBase`.
 ///
-/// Este widget se suscribe a un `JObservableBase` y se reconstruye cada
-/// vez que el valor del `JObservableBase` cambia.
+/// Este widget se suscribe a un `JObservableBase` y se reconstruye automáticamente
+/// cada vez que el valor del observable cambia. Es útil para crear interfaces reactivas
+/// que respondan dinámicamente a cambios en los datos.
 class JObserverBaseWidget<T> extends StatefulWidget {
   /// El `JObservableBase` que este widget está observando.
+  ///
+  /// Este observable es la fuente de datos que el widget observará y utilizará para
+  /// reconstruirse cuando cambie su valor.
   final JObservableBase<T> observable;
 
-  /// Una función que se llama para construir el widget cada vez que el
-  /// valor del `JObservableBase` cambia.
+  /// Una función que se llama para construir el widget cada vez que el valor del
+  /// `JObservableBase` cambia.
+  ///
+  /// Esta función recibe el valor actual del observable y debe devolver un widget
+  /// que represente ese valor.
+  ///
+  /// Ejemplo:
+  /// ```dart
+  /// (int value) => Text('Valor: $value'),
+  /// ```
   final Widget Function(T value) builder;
 
+  /// Constructor para el widget `JObserverBaseWidget`.
+  ///
+  /// Parámetros:
+  /// - [observable]: El `JObservableBase` que este widget observará.
+  /// - [builder]: La función que construye el widget basado en el valor del observable.
+  ///
+  /// Ejemplo:
+  /// ```dart
+  /// JObserverBaseWidget<int>(
+  ///   observable: myObservable,
+  ///   builder: (value) => Text('Valor: $value'),
+  /// );
+  /// ```
   const JObserverBaseWidget({
     super.key,
     required this.observable,
@@ -27,17 +52,21 @@ class JObserverBaseWidget<T> extends StatefulWidget {
   JObserverBaseWidgetState<T> createState() => JObserverBaseWidgetState<T>();
 }
 
-/// El estado de un `JObserverBaseWidget`.
+/// Estado del widget `JObserverBaseWidget`.
 ///
-/// Este estado implementa `JObserverBase`, lo que significa que puede
-/// suscribirse a un `JObservableBase` y ser notificado cuando el valor
-/// del `JObservableBase` cambia.
+/// Este estado implementa `JObserverBase`, lo que permite al widget suscribirse
+/// a un `JObservableBase` y recibir notificaciones cuando el valor del observable
+/// cambia.
 class JObserverBaseWidgetState<T> extends State<JObserverBaseWidget<T>>
     implements JObserverBase<T> {
   /// El valor actual del `JObservableBase`.
+  ///
+  /// Este valor se actualiza cada vez que el observable notifica un cambio.
   late T value;
 
   /// Una función que se puede llamar para desuscribirse del `JObservableBase`.
+  ///
+  /// Esta función se utiliza para limpiar la suscripción cuando el widget se elimina.
   late void Function() unsubscribe;
 
   @override
@@ -60,8 +89,8 @@ class JObserverBaseWidgetState<T> extends State<JObserverBaseWidget<T>>
 
   /// Notifica al observador con un nuevo valor.
   ///
-  /// Cuando se notifica un nuevo valor, este se guarda y se
-  /// reconstruye el widget.
+  /// Este método se llama automáticamente cuando el observable notifica un cambio.
+  /// Actualiza el valor y reconstruye el widget.
   @override
   void notify(T newValue) {
     setState(() {
@@ -72,9 +101,22 @@ class JObserverBaseWidgetState<T> extends State<JObserverBaseWidget<T>>
 
 /// Extensión para convertir un `JObservableBase` en un `JObserverBaseWidget`.
 ///
-/// Esta extensión añade un método `observer` a los `JObservableBase` que
-/// devuelve un `JObserverBaseWidget` que observa el `JObservableBase`.
+/// Esta extensión añade un método `observer` a los `JObservableBase`, permitiendo
+/// convertir fácilmente un observable en un widget reactivo que observe sus cambios.
+///
+/// Ejemplo:
+/// ```dart
+/// var counter = 0.observable;
+/// var widget = counter.observer((int value) => Text('$value'));
+/// ```
 extension JObserverWidgetBaseExtension<T> on JObservableBase<T> {
+  /// Convierte el `JObservableBase` en un `JObserverBaseWidget`.
+  ///
+  /// Parámetros:
+  /// - [builder]: Una función que construye el widget basado en el valor del observable.
+  ///
+  /// Retorna:
+  /// - Un `JObserverBaseWidget` que observa este observable.
   Widget observer(Widget Function(T value) builder) {
     return JObserverBaseWidget<T>(
       observable: this,
@@ -85,10 +127,11 @@ extension JObserverWidgetBaseExtension<T> on JObservableBase<T> {
 
 // ...
 
-/// Un widget que observa los cambios en un `JObservable`.
+/// Widget que observa los cambios en un `JObservable`.
 ///
-/// Este widget se suscribe a un `JObservable` y se reconstruye cada vez
-/// que el valor del `JObservable` cambia.
+/// Este widget se suscribe a un `JObservable` y se reconstruye automáticamente
+/// cada vez que el valor del observable cambia. Es útil para crear interfaces reactivas
+/// que respondan dinámicamente a cambios en los datos.
 ///
 /// Ejemplo:
 /// ```dart
@@ -102,32 +145,30 @@ extension JObserverWidgetBaseExtension<T> on JObservableBase<T> {
 class JObserverWidget<T> extends StatefulWidget {
   /// El `JObservable` que este widget está observando.
   ///
-  /// Este es un `JObservable<T>` que representa el observable que este
-  /// widget está observando.
+  /// Este observable es la fuente de datos que el widget observará y utilizará para
+  /// reconstruirse cuando cambie su valor.
   final JObservable<T> observable;
 
-  /// Una función que se llama para construir el widget cada vez que el
-  /// valor del `JObservable` cambia.
+  /// Una función que se llama para construir el widget cada vez que el valor del
+  /// `JObservable` cambia.
   ///
-  /// Esta es una función que toma un valor de tipo `T` y devuelve
-  /// un `Widget`.
-  final Widget Function(T value) onChange;
-
-  /// Crea un `JObserverWidget` con un `JObservable` y una
-  /// función de cambio.
-  ///
-  /// Este constructor toma un `JObservable` y una función de cambio y
-  /// crea una instancia de `JObserverWidget`.
-  ///
-  /// Parámetros:
-  ///   `observable`: El `JObservable` que este widget está observando.
-  ///   `onChange`: La función que se llama para construir el widget cada vez
-  ///               que el valor del `JObservable` cambia.
+  /// Esta función recibe el valor actual del observable y debe devolver un widget
+  /// que represente ese valor.
   ///
   /// Ejemplo:
   /// ```dart
-  /// var counter = 0.observable;
+  /// (int value) => Text('Valor: $value'),
+  /// ```
+  final Widget Function(T value) onChange;
+
+  /// Constructor para el widget `JObserverWidget`.
   ///
+  /// Parámetros:
+  /// - [observable]: El `JObservable` que este widget observará.
+  /// - [onChange]: La función que construye el widget basado en el valor del observable.
+  ///
+  /// Ejemplo:
+  /// ```dart
   /// JObserverWidget<int>(
   ///   observable: counter,
   ///   onChange: (int value) => Text('$value'),
@@ -143,22 +184,28 @@ class JObserverWidget<T> extends StatefulWidget {
   JObserverWidgetState<T> createState() => JObserverWidgetState<T>();
 }
 
-/// El estado de un `JObserverWidget`.
+/// Estado del widget `JObserverWidget`.
 ///
-/// Este estado implementa `JObserver`, lo que significa que puede
-/// suscribirse a un `JObservable` y ser notificado cuando el valor
-/// del `JObservable` cambia.
+/// Este estado implementa `JObserver`, lo que permite al widget suscribirse
+/// a un `JObservable` y recibir notificaciones cuando el valor del observable
+/// cambia.
 class JObserverWidgetState<T> extends State<JObserverWidget<T>>
     implements JObserver<T> {
-  /// El identificador único del observador.
+  /// Identificador único del observador.
+  ///
+  /// Este ID se genera automáticamente al crear el estado del widget y se utiliza
+  /// para depurar y registrar eventos relacionados con el observador.
   @override
   final String id;
 
   /// El valor actual del `JObservable`.
+  ///
+  /// Este valor se actualiza cada vez que el observable notifica un cambio.
   late T value;
 
-  /// Una función que se puede llamar para desuscribirse del
-  /// `JObservable`.
+  /// Una función que se puede llamar para desuscribirse del `JObservable`.
+  ///
+  /// Esta función se utiliza para limpiar la suscripción cuando el widget se elimina.
   late void Function() unsubscribe;
 
   JObserverWidgetState() : id = JUtils.generateUniqueID();
@@ -194,8 +241,8 @@ class JObserverWidgetState<T> extends State<JObserverWidget<T>>
 
   /// Notifica al observador con un nuevo valor.
   ///
-  /// Cuando se notifica un nuevo valor, este se guarda y se
-  /// reconstruye el widget.
+  /// Este método se llama automáticamente cuando el observable notifica un cambio.
+  /// Actualiza el valor y reconstruye el widget.
   @override
   void notify(T newValue) {
     value = newValue;
@@ -207,25 +254,22 @@ class JObserverWidgetState<T> extends State<JObserverWidget<T>>
 
 /// Extensión para convertir un `JObservable` en un `JObserverWidget`.
 ///
-/// Esta extensión añade un método `observer` a los `JObservable` que
-/// devuelve un `JObserverWidget` que observa el `JObservable`.
+/// Esta extensión añade un método `observer` a los `JObservable`, permitiendo
+/// convertir fácilmente un observable en un widget reactivo que observe sus cambios.
 ///
 /// Ejemplo:
 /// ```dart
 /// var counter = 0.observable;
-///
-/// counter.observer((int value) => Text('$value'));
+/// var widget = counter.observer((int value) => Text('$value'));
 /// ```
 extension JObserverWidgetExtension<T> on JObservable<T> {
-  /// Extensión `observer` para los `JObservable` que devuelve un
-  /// `JObserverWidget` que observa el `JObservable`.
+  /// Convierte el `JObservable` en un `JObserverWidget`.
   ///
-  /// Ejemplo:
-  /// ```dart
-  /// var counter = 0.observable;
+  /// Parámetros:
+  /// - [builder]: Una función que construye el widget basado en el valor del observable.
   ///
-  /// counter.observer((int value) => Text('$value'));
-  /// ```
+  /// Retorna:
+  /// - Un `JObserverWidget` que observa este observable.
   Widget observer(Widget Function(T value) builder) {
     return JObserverWidget<T>(
       observable: this,
