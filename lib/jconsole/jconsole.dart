@@ -28,13 +28,31 @@ class JConsole {
   /// Habilita/deshabilita los logs reactivos en la consola.
   ///
   /// Cuando está activado, muestra logs detallados de los observables y sus
-  /// observadores. Esto es útil para depurar flujos de datos reactivos en frameworks como JSM.
+  /// observadores. Esto es útil para depurar flujos de datos reactivos.
   static bool debugShowReactiveLogs = false;
 
-  // Colores ANSI predefinidos para mejorar la legibilidad de los logs.
-  static final _colorGreen = AnsiColor.fg(34); // Verde: Mensajes generales.
-  static final _colorYellow = AnsiColor.fg(220); // Amarillo: Advertencias.
-  static final _colorRed = AnsiColor.fg(196); // Rojo: Errores.
+  // Colores ANSI predefinidos para mejorar la legibilidad de los logs:
+
+  // Verde: Mensajes generales.
+  static final _colorGreen = AnsiColor.fg(34);
+  // Amarillo: Advertencias.
+  static final _colorYellow = AnsiColor.fg(220);
+  // Rojo: Errores.
+  static final _colorRed = AnsiColor.fg(196);
+
+  /// Registra un mensaje sin aplicar ningún estilo ANSI.
+  ///
+  /// Este método es útil para imprimir texto plano sin colores ni estilos.
+  ///
+  /// Parámetros:
+  /// - [obj]: El objeto a imprimir (se convierte a String automáticamente).
+  /// - [name]: Nombre opcional para identificar el origen del mensaje (por defecto: 'JSM').
+  static void printl(
+    dynamic obj, {
+    String name = _defaultName,
+  }) {
+    _printColored(AnsiColor.none, obj, name);
+  }
 
   /// Registra un mensaje de log en color verde.
   ///
@@ -52,9 +70,7 @@ class JConsole {
     dynamic obj, {
     String name = _defaultName,
   }) {
-    if (kDebugMode) {
-      _printColored(_colorGreen, obj, name);
-    }
+    _printColored(_colorGreen, obj, name);
   }
 
   /// Registra un mensaje de error en color rojo.
@@ -78,9 +94,7 @@ class JConsole {
     dynamic obj, {
     String name = _defaultName,
   }) {
-    if (kDebugMode) {
-      _printColored(_colorRed, obj, name);
-    }
+    _printColored(_colorRed, obj, name);
   }
 
   /// Registra un mensaje informativo en color amarillo.
@@ -99,9 +113,7 @@ class JConsole {
     dynamic obj, {
     String name = _defaultName,
   }) {
-    if (kDebugMode) {
-      _printColored(_colorYellow, obj, name);
-    }
+    _printColored(_colorYellow, obj, name);
   }
 
   /// Método privado para imprimir mensajes con colores ANSI.
@@ -206,7 +218,6 @@ class JConsole {
     final sw = _stopwatches.remove(id);
     if (sw != null) {
       sw.stop();
-      // log('Time $id: ${sw.elapsedMicroseconds} μs');
       final duration = _formatDuration(sw.elapsedMicroseconds, unit);
       log('Time $id: $duration');
     } else {
@@ -229,7 +240,6 @@ class JConsole {
   static void timeLog(String id, {TimeUnit unit = TimeUnit.microseconds}) {
     final sw = _stopwatches[id];
     if (sw != null && sw.isRunning) {
-      // log('Intermediate time for $id: ${sw.elapsedMicroseconds} μs');
       final duration = _formatDuration(sw.elapsedMicroseconds, unit);
       log('Intermediate time for $id: $duration');
     } else {

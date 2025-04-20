@@ -10,8 +10,7 @@ import 'jinstance.dart';
 ///
 /// Características principales:
 /// - Soporte para dependencias permanentes y no permanentes.
-/// - Métodos para agregar, encontrar, eliminar y limpiar dependencias.
-/// - Generación automática de claves únicas para evitar colisiones.
+/// - Métodos para agregar, encontrar y eliminar dependencias.
 class JDependency {
   /// Mapa interno que almacena todas las dependencias registradas.
   ///

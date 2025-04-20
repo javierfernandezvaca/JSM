@@ -175,10 +175,9 @@ class JObserverWidget<T> extends StatefulWidget {
   /// );
   /// ```
   JObserverWidget({
-    Key? key,
     required this.observable,
     required this.onChange,
-  }) : super(key: key ?? ValueKey(JUtils.generateUniqueID()));
+  }) : super(key: ValueKey(JUtils.generateUniqueID()));
 
   @override
   JObserverWidgetState<T> createState() => JObserverWidgetState<T>();
