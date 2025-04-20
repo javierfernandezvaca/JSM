@@ -1,49 +1,27 @@
 
-# **JSM**
+# JSM
 
-Librería de código abierto para Flutter que integra la **gestión de estado**, la **inyección de dependencias** y la **gestión de rutas** en una sola solución.
+JSM es una librería de código abierto para Flutter que integra la **gestión de estado**, la **inyección de dependencias** y la **gestión de rutas** en una solución unificada y eficiente.
 
-Su principal objetivo es permitir un desacoplamiento completo de la interfaz de usuario y la lógica de negocio, lo que facilita la creación de aplicaciones robustas y escalables.
+Su principal objetivo es permitir un desacoplamiento completo de la interfaz de usuario y la lógica de negocio, facilitando la creación de aplicaciones robustas y escalables, con un enfoque en el rendimiento y la productividad.
 
-Está diseñada con un enfoque basado en el rendimiento y la productividad, al minimizar el consumo de recursos mientras proporciona una sintaxis sencilla y fácil de usar.
+## Características Principales
 
-<br>
-
-## Características
-
-- [Instalación](#instalación)
-- [Configuración inicial](#instalación)
-  - `JMaterialApp`
-  - `JPage`
-- Bases de **JSM**
-  - [Gestión de estado](#gestión-de-estado)    
-    - [Simple](#administración-de-estado-simple)
-      - `JBuilderWidget` or `.builder`
-      - `update()`
-    - [Reactiva](#administración-de-estado-reactiva)
-      - `JObserverWidget` or `.observer`
-      - `.observable`
-  - [Inyección de dependencias](#inyección-de-dependencias) - `JDependency`
-  - [Gestión de rutas](#gestión-de-rutas) - `JRouter`
-  - [Gestión de servicios](#gestión-de-servicios) - `JService`
-- [Utilidades](#utilidades)
-  - [Internacionalización](#internacionalización)
-    - `JTranslations`
-    - `.tr`
-    - `JTranslateWidget` or `.translate`
-    - `JTranslateMultipleWidget` or `.translateList`
-  - [Temas Visuales](#temas-visuales) - `JTheme`
-  - [Diálogos](#jdialog) - `JDialog`
-  - [Consola de Depuración](#jconsole) - `JConsole`
-  - [Trabajadores](#jworker) - `JWorker`
-  - [Utilidades Generales](#jutils) - `JUtils`
-- [Ejemplos](#ejemplos)
+- **Gestión de Estado Dual**: 
+  - Estado Simple con `JBuilderWidget` y `update()`
+  - Estado Reactivo con `JObserverWidget` y `.observable`
+- **Inyección de Dependencias**: Sistema integrado con `JDependency`
+- **Gestión de Rutas**: Navegación simplificada con `JRouter`
+- **Gestión de Servicios**: Manejo de servicios globales con `JService`
+- **Internacionalización**: Soporte multilenguaje con `JTranslations`
+- **Temas**: Gestión de temas con `JTheme`
+- **Diálogos**: Sistema de diálogos con `JDialog`
+- **Depuración**: Consola de depuración con `JConsole`
+- **Utilidades**: Herramientas adicionales con `JUtils`
 
 <br>
 
 ## Instalación
-
-Añada la librería a su archivo `pubspec.yaml`:
 
 ```yaml
 dependencies:
@@ -53,31 +31,9 @@ dependencies:
       ref: master
 ```
 
-Luego, importe la librería en cada uno de los archivos en los se utilizará:
+## Uso Básico
 
-```dart
-import 'package:jsm/jsm.dart';
-```
-
-<br>
-
-## Acerca de JSM
-
-Para utilizar el poder y las bondades de JSM debe:
-
-> Agregar `J` antes de su `MaterialApp`, convirtiéndolo en `JMaterialApp`
-
-```dart
-void main() => runApp(JMaterialApp(/* ... */));
-```
-
-<br>
-
-### JMaterialApp
-
-`JMaterialApp` es la puerta de entrada a tu aplicación JSM. Simplemente reemplazando **MaterialApp** por **JMaterialApp** en tu función `main()`, desbloqueas todo el potencial de JSM para la gestión de estado, inyección de dependencias y enrutamiento sin necesidad de configuraciones adicionales.
-
-Ejemplo:
+### Configuración Inicial
 
 ```dart
 void main() {
@@ -91,49 +47,31 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return JMaterialApp(
       routes: [
-        JRoute(route: '/login', page: const LoginPage()),
-        JRoute(route: '/register', page: const RegisterPage()),
-        // ...
+        JRoute(route: '/home', page: const HomePage()),
       ],
-      initialRoute: '/login',
+      initialRoute: '/home',
     );
   }
 }
 ```
 
-Explicación:
-
-En este ejemplo, `JMaterialApp` no solo configura tu aplicación, sino que también integra la gestión de rutas de JSM, permitiéndote navegar fácilmente entre sus páginas declaradas en `routes`.
-
-<br>
-
-### JPage
-
-`JPage` simplifica la creación de páginas en tu aplicación JSM al proporcionar una forma estructurada de conectar una vista con su controlador asociado. Esto promueve la separación de la interfaz de usuario (UI) y la lógica de negocio, mejorando la organización y el mantenimiento de tu código.
-
-Al crear una `JPage`, defines un controlador y una función builder que recibe el controlador como argumento. JPage utiliza JDependency para asegurar que el controlador esté disponible para la vista, permitiéndote acceder a sus métodos y propiedades.
-
-Ejemplo:
+### Creación de Páginas
 
 ```dart
-class LoginController extends JController {
-  String message = "Hello...";
+class HomeController extends JController {
+  String message = "Bienvenido a JSM";
 
-  @override
-  void onInit() {}
-
-  @override
-  void onReady() {}
-
-  @override
-  void onClose() {}
+  void updateMessage(String newMessage) {
+    message = newMessage;
+    update();
+  }
 }
 
-class LoginPage extends StatelessWidget {
+class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return JPage<LoginController>(
-      create: () => LoginController(),
+    return JPage<HomeController>(
+      create: () => HomeController(),
       builder: (context, controller) {
         return Scaffold(
           body: Center(
@@ -146,56 +84,59 @@ class LoginPage extends StatelessWidget {
 }
 ```
 
-Explicación:
-
-En este ejemplo, LoginPage utiliza JPage para mostrar un mensaje proporcionado por LoginController. La función builder accede al controlador y utiliza su propiedad message para mostrarla en la pantalla.
-
 <br>
 
-## Gestión de estado
+## Módulos Principales
 
-La gestión de estado es un componente esencial en el desarrollo de aplicaciones. Esta se refiere a cómo se manejan los datos que determinan la interfaz de usuario y cómo estos cambian en respuesta a las interacciones del usuario. JSM ofrece dos formas diferentes de administrar el estado:
+### JController
 
-- [Administración de estado simple](#administración-de-estado-simple)
-- [Administración de estado reactiva](#administración-de-estado-reactiva)
+Base para la lógica de negocio con ciclo de vida integrado:
+- `onInit()`: Inicialización
+- `onReady()`: Post-inicialización
+- `onClose()`: Limpieza
 
-<br>
+### JService
 
-### Administración de estado simple
-
-El mecanismo de la administración de estado simple de JSM, es una herramienta poderosa que utiliza el método `update()` con una lista opcional de identificadores de cada widget especial `JBuilderWidget`, que ofrece varias ventajas que lo hacen una opción eficiente y flexible para actualizar la interfaz de usuario; asi como:
-
-- **Actualizaciones precisas**:
-  - Permite realizar actualizaciones específicas en lugar de una actualización completa `setState()`, optimizando el rendimiento y la experiencia del usuario.
-  - Si no se proporciona la lista de identificadores, se realiza una actualización completa, lo que garantiza que la interfaz de usuario se mantenga consistente.
-
-- **Control granular**:
-  - La lista de identificadores permite actualizar solo los `JBuilderWidget` que se necesitan, minimizando el impacto en la interfaz de usuario y evitando redibujados innecesarios.
-  - Es ideal para escenarios donde solo una parte de la interfaz de usuario necesita ser actualizada en respuesta a un cambio de estado.
-
-- **Mejora del rendimiento**:
-  - Al evitar actualizaciones completas de la interfaz de usuario, se reduce el consumo de recursos y se mejora la fluidez de la aplicación.
-  - Es especialmente útil para aplicaciones con interfaces de usuario complejas o con un alto volumen de actualizaciones de estado.
-
-- **Flexibilidad y adaptabilidad**:
-  - El mecanismo se adapta a diferentes necesidades de actualización, ya sea que se requiera un cambio completo o solo una actualización específica.
-  - Permite un control más preciso sobre cómo se actualiza la interfaz de usuario en respuesta a los cambios de estado.
-
-<br>
-
-Ejemplo:
-
-> **Lógica de negocio**
-
+Gestión de servicios globales:
 ```dart
-class MiControlador extends JController {
-  String mensaje = 'Hola mundo';
+await JService.start<TodosService>(TodosService());
+final service = JService.find<TodosService>();
+```
 
-  void actualizarMensaje(String texto) {
-    mensaje = texto;
-    update(['msgId']);
-  }
-}
+### JRouter
+
+Navegación simplificada:
+```dart
+JRouter.to('/details', arguments: {'id': 1});
+```
+
+### JTranslations
+
+Internacionalización:
+```dart
+'welcome'.tr  // Traduce la clave 'welcome'
+```
+```
+
+## Ejemplos Incluidos
+
+1. **Contador Reactivo**: Demostración de estado reactivo
+2. **Lista de Tareas**: Ejemplo de gestión de servicios y estado
+3. **Temas e Internacionalización**: Ejemplo de temas y traducciones
+4. **Modales y Diálogos**: Demostración del sistema de diálogos
+5. **Tres en Raya**: Juego que demuestra la gestión de estado
+
+## Contribución
+
+Las contribuciones son bienvenidas. Por favor, asegúrate de:
+
+1. Crear un issue describiendo el cambio propuesto
+2. Crear un pull request vinculado al issue
+3. Seguir las guías de estilo del proyecto
+
+## Licencia
+
+Este proyecto está bajo la Licencia MIT.
 ```
 
 Explicación:
